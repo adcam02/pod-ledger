@@ -277,9 +277,15 @@ select.in { max-width: none; }
   display: grid; align-items: center; column-gap: 10px;
   grid-template-columns: 2em minmax(0, 1fr) 5.2em 3.6em 3.6em 5.4em 6em;
 }
-.explain { margin-top: 16px; padding: 12px 16px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
-.explain h3 { font-size: 17px; margin-bottom: 6px; }
-.explain ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); font-size: 14.5px; }
+.explain { margin-top: 16px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.explain summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; list-style: none;
+  font-family: var(--font-display); font-size: 16px; font-weight: 600;
+}
+.explain summary::-webkit-details-marker { display: none; }
+.explain summary::after { content: "+"; font-size: 22px; font-weight: 400; line-height: 1; color: var(--muted); }
+.explain[open] summary::after { content: "–"; }
+.explain ul { margin: 0 0 14px; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); font-size: 14.5px; }
 .explain b { color: var(--ink); }
 .ladder-head { padding: 0 14px 6px; }
 .ladder-head span { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -539,12 +545,48 @@ select.in { max-width: none; }
 .chart-table { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table th, .data-table td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
-.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table tbody tr:last-child > * { border-bottom: 0; }
 .data-table thead th {
   position: sticky; top: 0; z-index: 1; background: var(--surface-2);
   font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
 }
 .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) {
+  .places-table { font-size: 13px; }
+  .places-table th, .places-table td { padding: 6px 5px; }
+  .places-table th[scope="row"] .plink { display: inline-block; max-width: 7.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+}
+/* Filter chips (the Games filters, the Stats jump row) and the games search box. */
+.filter-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 1px 1px 3px; }
+.filter-chips::-webkit-scrollbar { display: none; }
+.fchip {
+  appearance: none; flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 13px; cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600;
+}
+.fchip:hover { color: var(--ink); border-color: var(--ink-2); }
+.fchip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.fchip .n { font-weight: 500; opacity: .72; }
+.stat-jump { margin: -6px 0 16px; }
+.game-filters { display: grid; gap: 10px; margin: -4px 0 18px; }
+.search-box { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--muted); cursor: text; }
+.search-box:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 22%, transparent); }
+.search-box input { flex: 1; min-width: 0; border: 0; padding: 0; background: none; outline: none; color: var(--ink); font: inherit; font-size: 16px; }
+.search-box input::placeholder { color: var(--muted); opacity: 1; }
+.chart, .panel { scroll-margin-top: 76px; }
+.viz .ref-line.dash { stroke-dasharray: 5 4; opacity: .8; }
+.key-line.ref { height: 0; background: none; border-top: 2px dashed var(--ink-2); }
+/* Colours by month */
+.cm-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cm-table th, .cm-table td { padding: 8px 3px; text-align: center; border-bottom: 1px solid var(--line); }
+.cm-table tbody tr:last-child > * { border-bottom: 0; }
+.cm-table thead th { padding-top: 0; }
+.cm-table th[scope="row"] { text-align: left; font-weight: 700; white-space: nowrap; padding-right: 8px; }
+.cm-table .cm-n { display: block; color: var(--muted); font-size: 12.5px; font-weight: 500; }
+.cm-cell { display: grid; gap: 5px; justify-items: center; font-variant-numeric: tabular-nums; font-weight: 600; cursor: default; }
+.cm-cell i { display: block; width: 100%; max-width: 40px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--ink) 10%, transparent); overflow: hidden; }
+.cm-cell i::before { content: ""; display: block; height: 100%; width: var(--p); background: var(--c); border-radius: 2px; }
+.cm-cell.zero { color: var(--muted); font-weight: 500; }
+.cm-cell.is-hot { color: var(--ink); }
 .panel .data-table { border: 0; }
 .panel .data-table th:first-child, .panel .data-table td:first-child { padding-left: 0; }
 .panel .data-table th:last-child, .panel .data-table td:last-child { padding-right: 0; }
@@ -1102,6 +1144,8 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .kpi .v { background: linear-gradient(90deg, var(--ink) 40%, rgb(var(--soft))); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
 
 /* Frosted panels */
+[data-look="arcade"] :is(.fchip, .search-box) { background-color: var(--glass); border-color: var(--glass-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+[data-look="arcade"] .fchip[aria-pressed="true"] { background: var(--grad-sm); border-color: transparent; color: #fff; }
 [data-look="arcade"] :is(.panel, .chart, .kpis, .ladder, .cmd-list, .explain, .table-card, .seat, .ko-row, .cmdlet, .tp-empty, .speed-top, .place-tiles li) {
   background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.25); backdrop-filter: blur(16px) saturate(1.25);
   border: 1px solid var(--glass-line); box-shadow: inset 0 1px 0 var(--glass-hi), var(--shadow);
@@ -1227,14 +1271,14 @@ select.in.first-pick { max-width: 20rem; }
         </div>
         <ol class="ladder" id="ladder"></ol>
         <p class="footnote">Tap a player for their full record.</p>
-        <section class="explain" aria-labelledby="h-explain">
-          <h3 id="h-explain">How the standings work</h3>
+        <details class="explain">
+          <summary>How the standings work</summary>
           <ul>
             <li><b>Won</b> is games won out of games played, and <b>Win %</b> is the share you won. Win % lists players with at least three games first.</li>
             <li><b>Outlasted</b> counts the opponents who went out before you. Win and you’ve outlasted the whole table, so a win at a table of five counts 4. Come 2nd at a table of four and you’ve outlasted 2. Players knocked out together don’t count each other, and games logged without knockouts only count the winner’s.</li>
             <li><b>vs average</b> compares your wins with an average player’s, based on player count. An average player wins 1 game in 4 at a table of four and 1 in 3 at a table of three. Above zero means you win more than average, so it’s fair on people who have played fewer games.</li>
           </ul>
-        </section>
+        </details>
       </div>
       <aside class="col-side">
         <section id="rivalBox" aria-labelledby="h-rival" hidden><h2 class="side-h" id="h-rival">Rivalry of the month</h2><div id="rivalBody"></div></section>
@@ -1264,11 +1308,18 @@ select.in.first-pick { max-width: 20rem; }
       <div><h2 id="h-games">Games</h2><p class="count" id="gamesCount"></p></div>
       <div class="controls"><label class="field inline"><span>Player</span><select id="gamesPlayer"></select></label></div>
     </div>
+    <div class="game-filters">
+      <label class="search-box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><span class="sr">Search games</span><input type="search" id="gamesSearch" placeholder="Search players, decks and cards" autocomplete="off" enterkeyhint="search" spellcheck="false"></label>
+      <div class="filter-chips" id="gamesHow" role="group" aria-label="How the game ended"></div>
+    </div>
     <div class="card-stack" id="gameList"></div>
   </section>
 
   <section class="view" id="view-stats" aria-labelledby="h-stats" hidden>
     <div class="section-head"><div><h2 id="h-stats">Stats</h2><p class="count" id="statsCount"></p></div></div>
+    <nav class="filter-chips stat-jump" id="statJump" aria-label="Jump to a part of the stats">
+      <button type="button" class="fchip" data-jump="race">Over time</button><button type="button" class="fchip" data-jump="finish">Endings</button><button type="button" class="fchip" data-jump="outs">Knockouts</button><button type="button" class="fchip" data-jump="h-places">Places</button><button type="button" class="fchip" data-jump="h-speed">Deck speed</button><button type="button" class="fchip" data-jump="colours">Colours</button><button type="button" class="fchip" data-jump="h-h2h">Head to head</button><button type="button" class="fchip" data-jump="h-records">Records</button>
+    </nav>
     <div class="kpis" id="kpis"></div>
     <div class="stats-grid" id="statsGrid">
       <figure class="chart span-2" data-chart="race">
@@ -1279,6 +1330,15 @@ select.in.first-pick { max-width: 20rem; }
         <ul class="legend" id="raceLegend"></ul>
         <div class="chart-body" id="raceBody"></div>
         <div class="chart-table" id="raceTable" hidden></div>
+      </figure>
+      <figure class="chart span-2" data-chart="winrate">
+        <div class="chart-head">
+          <div><h3>Win rate over time</h3><p class="chart-sub">Each player’s share of their games won, drawn from their third game on</p></div>
+          <button type="button" class="link small" data-table="winrate" aria-expanded="false">Show table</button>
+        </div>
+        <ul class="legend" id="winrateLegend"></ul>
+        <div class="chart-body" id="winrateBody"></div>
+        <div class="chart-table" id="winrateTable" hidden></div>
       </figure>
       <figure class="chart" data-chart="months">
         <div class="chart-head">
@@ -1342,6 +1402,14 @@ select.in.first-pick { max-width: 20rem; }
         </div>
         <div class="chart-body" id="coloursBody"></div>
         <div class="chart-table" id="coloursTable" hidden></div>
+      </figure>
+      <figure class="chart" data-chart="colmonths">
+        <div class="chart-head">
+          <div><h3>Colours by month</h3><p class="chart-sub">Share of decks with each colour, newest month first</p></div>
+          <button type="button" class="link small" data-table="colmonths" aria-expanded="false">Show table</button>
+        </div>
+        <div class="chart-body" id="colmonthsBody"></div>
+        <div class="chart-table" id="colmonthsTable" hidden></div>
       </figure>
       <figure class="chart" data-chart="deadly">
         <div class="chart-head">
@@ -1914,6 +1982,9 @@ const state = {
   cmdSort: "wins",
   cmdPlayer: "",
   gamesPlayer: "",
+  gamesQuery: "",
+  gamesHow: "",
+  stale: false,
   expanded: new Set(),
   tables: new Set(),
   highlightId: null,
@@ -2228,6 +2299,7 @@ function renderMasthead() {
   let sub;
   if (state.phase === "loading") sub = "Loading games…";
   else if (state.phase === "offline") sub = "Not connected to the spreadsheet";
+  else if (state.stale) sub = state.refreshError ? "Showing the games this device saw last" : "Checking for new games…";
   else if (!state.games.length) sub = "No games logged yet";
   else sub = "";
   $("#mastheadSub").textContent = sub;
@@ -2537,12 +2609,29 @@ function renderCommanders(st) {
 function renderGames(st, games) {
   if (state.gamesPlayer && !st.players.some((p) => p.key === state.gamesPlayer)) state.gamesPlayer = "";
   $("#gamesPlayer").innerHTML = playerOptions(st, state.gamesPlayer);
-  const list = (state.gamesPlayer ? games.filter((g) => g.seats.some((s) => norm(s.player) === state.gamesPlayer)) : games).slice().sort(byNewest);
-  $("#gamesCount").textContent = plural(list.length, "game");
+  const base = (state.gamesPlayer ? games.filter((g) => g.seats.some((s) => norm(s.player) === state.gamesPlayer)) : games).slice().sort(byNewest);
+  // How each game ended, for the chips: its win type, or "draw" when nobody won.
+  const howOf = (g) => (g.winner == null ? "draw" : g.winType || "other");
+  const inBase = new Set(base.map(howOf));
+  if (state.gamesHow && !inBase.has(state.gamesHow)) state.gamesHow = "";
+  const words = norm(state.gamesQuery).split(" ").filter(Boolean);
+  const hay = (g) => norm([g.winDetail, g.keyCard, g.notes, g.winner == null ? "draw" : WT_LABEL.get(g.winType)]
+    .concat(...g.seats.map((s) => [s.player, s.commander, s.partner])).filter(Boolean).join(" "));
+  const searched = words.length ? base.filter((g) => { const h = hay(g); return words.every((w) => h.indexOf(w) >= 0); }) : base;
+  const list = state.gamesHow ? searched.filter((g) => howOf(g) === state.gamesHow) : searched;
+  // The chips count what the search leaves, so they narrow it further.
+  const counts = new Map();
+  searched.forEach((g) => counts.set(howOf(g), (counts.get(howOf(g)) || 0) + 1));
+  const hows = WIN_TYPES.map((w) => w[0]).concat(["draw"]).filter((k) => counts.has(k) || k === state.gamesHow);
+  $("#gamesHow").hidden = inBase.size < 2;
+  $("#gamesHow").innerHTML = inBase.size < 2 ? "" : '<button type="button" class="fchip" data-games-how="" aria-pressed="' + !state.gamesHow + '">All <span class="n">' + searched.length + "</span></button>" +
+    hows.map((k) => '<button type="button" class="fchip" data-games-how="' + k + '" aria-pressed="' + (state.gamesHow === k) + '">' +
+      esc(k === "draw" ? "No winner" : WT_LABEL.get(k)) + ' <span class="n">' + (counts.get(k) || 0) + "</span></button>").join("");
+  $("#gamesCount").textContent = list.length === base.length ? plural(base.length, "game") : list.length + " of " + plural(base.length, "game");
   $("#gameList").innerHTML = list.length ? list.map((g) => gameCardHTML(g,
     '<button type="button" class="gc-act" data-share-game="' + esc(g.id) + '">' + ICON.share + "Share</button>" +
     (canSave() ? '<button type="button" class="gc-act" data-edit="' + esc(g.id) + '">' + ICON.edit + 'Edit</button><button type="button" class="gc-act gc-del" data-del="' + esc(g.id) + '">' + ICON.trash + "Delete</button>" : "")
-  )).join("") : '<p class="muted">No games to show for this filter.</p>';
+  )).join("") : base.length ? '<p class="muted games-none">No games match. <button type="button" class="link" data-games-clear>Show all games</button></p>' : '<p class="muted">No games to show for this filter.</p>';
   if (state.highlightId) {
     const el = document.getElementById("game-" + state.highlightId);
     if (el) el.scrollIntoView({ block: "center", behavior: reduceMotion() ? "auto" : "smooth" });
@@ -2657,6 +2746,7 @@ function renderStats(st, games, colourMap) {
     : state.period === "all" ? (games.length === 1 ? "Across 1 game" : "Across all " + plural(games.length, "game")) : "Across " + plural(games.length, "game") + " in " + periodPhrase();
   renderKpis(st, games);
   renderRace(games, colourMap);
+  renderWinRate(games, colourMap);
   renderMonths(games);
   renderTurns(games, st);
   renderFinishes(st);
@@ -2665,6 +2755,7 @@ function renderStats(st, games, colourMap) {
   renderPlaces(st);
   renderSpeed(st);
   renderColours(st);
+  renderColourMonths(games);
   renderDeadly(st);
   renderFirst(st);
   renderMulls(st);
@@ -2672,7 +2763,7 @@ function renderStats(st, games, colourMap) {
   renderRecords(games, st);
   renderCombos(st);
   renderCards(games);
-  ["race", "months", "turns", "finish", "outs", "kills", "colours", "deadly"].forEach(applyTableToggle);
+  ["race", "winrate", "months", "turns", "finish", "outs", "kills", "colours", "colmonths", "deadly"].forEach(applyTableToggle);
 }
 
 function kpiHTML(k, v, s) {
@@ -2770,6 +2861,161 @@ function renderRace(games, colourMap) {
   tbl.innerHTML = tableHTML(["Game", "Date", "Winner"].concat(tableSeries.map((sr) => sr.name)),
     asc.map((g, i) => [String(i + 1), fmtDate(g.playedOn, false), g.winner != null ? g.seats[g.winner].player : "No winner"].concat(tableSeries.map((sr) => String(sr.values[i])))),
     [0].concat(tableSeries.map((_, i) => i + 3)));
+}
+
+/* Each regular's win rate after every game, drawn from their third game on (before that a single result swings it
+   wildly), with a dashed line for what an average player would win at the same table sizes. */
+const WR_FROM = 3;
+function renderWinRate(games, colourMap) {
+  const body = $("#winrateBody"), legend = $("#winrateLegend"), tbl = $("#winrateTable");
+  const asc = games.slice().sort(byNewest).reverse();
+  const n = asc.length;
+  const played = new Map(), won = new Map(), names = new Map(), vals = new Map();
+  let expSum = 0;
+  asc.forEach((g, i) => {
+    expSum += 1 / Math.max(2, g.seats.length);
+    g.seats.forEach((st, si) => {
+      const k = norm(st.player) || "unknown";
+      names.set(k, st.player);
+      played.set(k, (played.get(k) || 0) + 1);
+      if (g.winner === si) won.set(k, (won.get(k) || 0) + 1);
+      if (!vals.has(k)) vals.set(k, new Array(n).fill(null));
+    });
+    vals.forEach((arr, k) => {
+      const p = played.get(k) || 0, w = won.get(k) || 0;
+      if (p >= WR_FROM) arr[i] = { r: w / p, w: w, p: p };
+    });
+  });
+  const series = Array.from(vals.keys()).filter((k) => colourMap.get(k) && (played.get(k) || 0) >= WR_FROM)
+    .map((k) => ({ key: k, name: names.get(k), slot: colourMap.get(k), values: vals.get(k) })).sort((a, b) => a.slot - b.slot);
+  if (n < WR_FROM || !series.length) {
+    body.innerHTML = '<p class="chart-empty">This fills in once a player has ' + WR_FROM + " games in this period.</p>";
+    legend.innerHTML = "";
+    tbl.innerHTML = "";
+    return;
+  }
+  const avg = expSum / n;
+  const W = Math.max(280, Math.floor(body.clientWidth));
+  const H = W < 560 ? 230 : 280;
+  const direct = series.length <= 4;
+  const m = { t: 12, r: direct ? 118 : 14, b: 30, l: 42 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const x = (i) => m.l + (i * pw) / (n - 1);
+  const y = (r) => m.t + ph * (1 - r);
+  let s = svgOpen(W, H, "Win rate over time for " + plural(series.length, "player") + " across " + n + " games");
+  [0, 0.25, 0.5, 0.75, 1].forEach((r) => {
+    s += '<line class="grid" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + y(r) + '" y2="' + y(r) + '"/>';
+    s += '<text class="tick" x="' + (m.l - 8) + '" y="' + (y(r) + 4) + '" text-anchor="end">' + Math.round(r * 100) + "%</text>";
+  });
+  s += '<line class="axis" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + y(0) + '" y2="' + y(0) + '"/>';
+  s += '<line class="ref-line dash" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + y(avg).toFixed(1) + '" y2="' + y(avg).toFixed(1) + '"/>';
+  const tickCount = Math.max(2, Math.min(n, Math.floor(pw / 56)));
+  const xTicks = new Set();
+  for (let k = 0; k < tickCount; k++) xTicks.add(Math.round((k * (n - 1)) / (tickCount - 1)));
+  xTicks.forEach((i) => { s += '<text class="tick" x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle">' + (i + 1) + "</text>"; });
+  const pathOf = (vals) => {
+    let d = "", on = false;
+    vals.forEach((v, i) => { if (!v) { on = false; return; } d += (on ? "L" : "M") + x(i).toFixed(1) + "," + y(v.r).toFixed(1); on = true; });
+    return d;
+  };
+  series.forEach((sr) => { s += '<path class="line" style="stroke:var(--series-' + sr.slot + ')" d="' + pathOf(sr.values) + '"/>'; });
+  series.forEach((sr) => { s += '<circle class="dot" cx="' + x(n - 1) + '" cy="' + y(sr.values[n - 1].r) + '" r="4" style="fill:var(--series-' + sr.slot + ')"/>'; });
+  if (direct) {
+    const labels = series.map((sr) => ({ sr: sr, y0: y(sr.values[n - 1].r), y: y(sr.values[n - 1].r) })).sort((a, b) => a.y0 - b.y0);
+    for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 16) labels[i].y = labels[i - 1].y + 16;
+    const over = labels.length ? labels[labels.length - 1].y - (m.t + ph) : 0;
+    if (over > 0) labels.forEach((l) => { l.y -= over; });
+    const lx = m.l + pw + 16;
+    labels.forEach((l) => {
+      if (Math.abs(l.y - l.y0) > 1) s += '<line class="leader" x1="' + (x(n - 1) + 6) + '" y1="' + l.y0 + '" x2="' + (lx - 4) + '" y2="' + l.y + '"/>';
+      const nm = l.sr.name.length > 11 ? l.sr.name.slice(0, 10) + "…" : l.sr.name;
+      s += '<text class="end-label" x="' + lx + '" y="' + (l.y + 4) + '">' + esc(nm) + " · " + Math.round(l.sr.values[n - 1].r * 100) + "%</text>";
+    });
+  }
+  s += '<g id="wrHover"></g>';
+  s += '<rect class="race-hit" id="wrHit" x="' + (m.l - 6) + '" y="' + m.t + '" width="' + (pw + 12) + '" height="' + ph + '" tabindex="0" aria-label="Step through the games with the arrow keys"/>';
+  s += "</svg>";
+  body.innerHTML = s;
+  legend.innerHTML = series.map((sr) => '<li><span class="key-line" style="background:var(--series-' + sr.slot + ')"></span>' + esc(sr.name) + "</li>").join("") +
+    '<li><span class="key-line ref"></span>Average player (' + Math.round(avg * 100) + "%)</li>";
+  wireWinRate(asc, series, x, y, m, n);
+  tbl.innerHTML = tableHTML(["Player", "Games", "Wins", "Win rate now", "After game " + WR_FROM],
+    series.map((sr) => {
+      const first = sr.values.find(Boolean), last = sr.values[n - 1];
+      return [sr.name, String(last.p), String(last.w), Math.round(last.r * 100) + "%", Math.round(first.r * 100) + "%"];
+    }).concat([["Average player", "", "", Math.round(avg * 100) + "%", ""]]), [1, 2, 3, 4]);
+}
+function wireWinRate(asc, series, x, y, m, n) {
+  const hit = document.getElementById("wrHit"), layer = document.getElementById("wrHover");
+  if (!hit) return;
+  let idx = n - 1;
+  const show = (i) => {
+    idx = Math.max(0, Math.min(n - 1, i));
+    const g = asc[idx], cx = x(idx);
+    let h = '<line class="crosshair" x1="' + cx + '" x2="' + cx + '" y1="' + m.t + '" y2="' + y(0) + '"/>';
+    series.forEach((sr) => { const v = sr.values[idx]; if (v) h += '<circle class="dot" cx="' + cx + '" cy="' + y(v.r) + '" r="4" style="fill:var(--series-' + sr.slot + ')"/>'; });
+    layer.innerHTML = h;
+    const w = g.winner != null ? g.seats[g.winner].player : null;
+    const rows = series.filter((sr) => sr.values[idx]).sort((a, b) => b.values[idx].r - a.values[idx].r || a.name.localeCompare(b.name))
+      .map((sr) => ({ key: "var(--series-" + sr.slot + ")", value: Math.round(sr.values[idx].r * 100) + "%", label: sr.name + " · " + sr.values[idx].w + " of " + sr.values[idx].p }));
+    buildTip({ title: "Game " + (idx + 1) + " · " + fmtDate(g.playedOn, false), sub: (w ? w + " won" : "No winner") + (rows.length ? "" : ". No one has " + WR_FROM + " games yet."), rows: rows });
+    const r = hit.ownerSVGElement.getBoundingClientRect();
+    placeTip(r.left + cx, r.top + m.t, r.top + y(0));
+  };
+  const at = (e) => { const r = hit.getBoundingClientRect(); return Math.round(((e.clientX - r.left - 6) / (r.width - 12)) * (n - 1)); };
+  const clear = () => { layer.innerHTML = ""; hideTip(); };
+  hit.addEventListener("pointermove", (e) => show(at(e)));
+  hit.addEventListener("pointerdown", (e) => show(at(e)));
+  hit.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") clear(); });
+  hit.addEventListener("focus", () => show(idx));
+  hit.addEventListener("blur", clear);
+  hit.addEventListener("keydown", (e) => {
+    const moves = { ArrowRight: idx + 1, ArrowLeft: idx - 1, Home: 0, End: n - 1 };
+    if (e.key in moves) { e.preventDefault(); show(moves[e.key]); }
+  });
+}
+
+/* How many decks each month had each colour (a Temur deck counts for green, blue and red). */
+const CM_COLS = ["W", "U", "B", "R", "G", "C"];
+function renderColourMonths(games) {
+  const body = $("#colmonthsBody"), tbl = $("#colmonthsTable");
+  const months = new Map();
+  games.forEach((g) => {
+    const k = (g.playedOn || "").slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(k)) return;
+    g.seats.forEach((st) => {
+      const ci = ciForSeat(st);
+      const letters = (ci === "C" ? ["C"] : String(ci || "").split("")).filter((c) => "WUBRG".indexOf(c) >= 0 || ci === "C");
+      if (!letters.length) return;
+      if (!months.has(k)) months.set(k, { decks: 0, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
+      const row = months.get(k);
+      row.decks++;
+      letters.forEach((c) => { row[c]++; });
+    });
+  });
+  const keys = Array.from(months.keys()).sort().reverse();
+  if (!keys.length) {
+    body.innerHTML = '<p class="chart-empty">No decks with known colours in this period.</p>';
+    tbl.innerHTML = "";
+    return;
+  }
+  const label = (k) => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, 1).toLocaleDateString("en-AU", { month: "short", year: "numeric" });
+  const tone = (c) => (c === "C" ? "#A9B0B7" : MANA_TONES[c].fill);
+  const name = (c) => COLOUR_NAMES[c].charAt(0).toUpperCase() + COLOUR_NAMES[c].slice(1);
+  body.innerHTML = '<table class="cm-table"><thead><tr><th scope="col"><span class="sr">Month</span></th>' +
+    CM_COLS.map((c) => '<th scope="col"><span class="pips md" role="img" aria-label="' + name(c) + '">' + pipIcon(c) + "</span></th>").join("") + "</tr></thead><tbody>" +
+    keys.map((k) => {
+      const row = months.get(k);
+      return '<tr><th scope="row">' + esc(label(k)) + '<span class="cm-n">' + plural(row.decks, "deck") + "</span></th>" +
+        CM_COLS.map((c) => {
+          const pct = Math.round((row[c] / row.decks) * 100);
+          const tip = tipRef({ title: label(k) + " · " + name(c), value: pct + "%", sub: row[c] + " of " + plural(row.decks, "deck") + " had " + COLOUR_NAMES[c] + (c === "C" ? " identities" : " in them") });
+          return '<td><span class="cm-cell' + (row[c] ? "" : " zero") + '" data-tip="' + tip + '" tabindex="0" style="--p:' + pct + "%;--c:" + tone(c) + '">' + pct + '%<i aria-hidden="true"></i></span></td>';
+        }).join("") + "</tr>";
+    }).join("") + "</tbody></table>";
+  tbl.innerHTML = tableHTML(["Month", "Decks"].concat(CM_COLS.map(name)),
+    keys.map((k) => { const row = months.get(k); return [label(k), String(row.decks)].concat(CM_COLS.map((c) => Math.round((row[c] / row.decks) * 100) + "%")); }),
+    [1, 2, 3, 4, 5, 6, 7]);
 }
 
 function wireRace(asc, series, x, y, m, n) {
@@ -3950,121 +4196,41 @@ function picksHTML(name, count, nonce) {
 /* ---------- the splash message ---------- */
 const SPLASHES = [
   // Cute ones
-  "Shuffle up and deal!", "Now with extra Sol Rings!", "Pay the one!", "Remember your upkeep!", "Draw, go!",
-  "In response…", "Hold priority!", "Is that lethal?", "Commander damage counts!", "21 is a magic number!",
-  "Snacks are a win condition!", "Who’s hosting?", "Casual, we promise!", "Bracket 3, honest!", "It’s just a seven!",
-  "Sleeve up!", "100 cards, no regrets!", "Cultivate is always correct!", "Have you tried more lands?", "Flooded again!",
-  "Top-decked it!", "Everyone’s a threat!", "Politics!", "Rule 0 chat!", "Also try Planechase!", "Also try Archenemy!",
-  "Also try Minecraft!", "Cascade into joy!", "Blink blink!", "Go wide!", "Go tall!", "Tokens everywhere!",
-  "Counterspell? Rude!", "Board wipe o’clock!", "The stack is sacred!", "Friendship is the real win con!",
-  "Pet the cat between turns!", "Hydrate between games!", "Good game, well played!", "Tapped out!", "Mana screwed!",
-  "Fetch, crack, shuffle!", "Treasure for everyone!", "Squirrels!", "More dragons!", "Sol Ring, turn one!",
-  "Mox not included!", "Now in five colours!", "Foil everything!", "Made with love!", "Also try Brawl!",
-  "Spin the planar die!", "Who has the monarch?", "Take an extra turn!", "Don’t forget commander tax!",
-  "Hexproof hugs!", "Indestructible friendship!", "Lifelink love!", "Group hug!", "Mulligan to seven!", "One more game?",
-  "Untap, upkeep, draw!", "Craterhoof incoming?", "Respond with snacks!", "Roll for turn order!",
+  "Now with extra Sol Rings!", "Pay the one!", "Remember your upkeep!", "In response…", "Is that lethal?",
+  "Who’s hosting?", "Casual, we promise!", "Bracket 3, honest!", "Have you tried more lands?", "Top-decked it!",
+  "Everyone’s a threat!", "Politics!", "Also try Minecraft!", "Cascade into joy!", "Counterspell? Rude!",
+  "Board wipe o’clock!", "The stack is sacred!", "Friendship is the real win con!", "Pet the cat between turns!",
+  "Hydrate between games!", "Squirrels!", "Sol Ring, turn one!", "Don’t forget commander tax!",
+  "Indestructible friendship!",
   // Inside jokes: the tax man
-  "Do you pay for Rhystic Study?", "Do you pay for Smothering Tithe?", "Nobody ever pays for Rhystic Study",
-  "Pay the one. Please. I’m begging.", "Didn’t pay the one? I draw a card.", "Mystic Remora wants four. Pay up!",
-  "Esper Sentinel says pay the one", "Ghostly Prison: pay two per attacker", "Smothering Tithe made me 11 Treasure",
-  "Rhystic Study: the gift that keeps taxing", "Kill the Rhystic Study player!",
+  "Do you pay for Rhystic Study?", "Do you pay for Smothering Tithe?", "Pay the one. Please. I’m begging.",
+  "Kill the Rhystic Study player!",
   // It's casual, honest
-  "Turn one Sol Ring. Very casual.", "Every precon has a Sol Ring", "It’s a 7, I swear", "It’s a precon with upgrades",
-  "My deck is jank, I promise", "Casual deck, runs four tutors", "It’s not a combo deck, it just wins",
-  "Bracket 2 (it has Thassa’s Oracle)", "It’s only a Game Changer if it wins", "The sleeves cost more than the deck",
-  "Precon vs $2000 deck: fair fight", "It’s not a pile, it’s a strategy", "Built this deck at 2am",
-  "Proxy? It’s a playtest card", "36 lands and a dream", "EDHREC said 38 lands",
+  "Turn one Sol Ring. Very casual.", "My deck is jank, I promise", "Casual deck, runs four tutors",
+  "It’s not a combo deck, it just wins", "It’s only a Game Changer if it wins",
   // Threat assessment
-  "I’m not the threat!", "I’m basically dead on board", "Don’t attack me, attack them!", "Why is everyone attacking me?",
-  "Kingmaking? Me? Never.", "You don’t attack me, I don’t attack you. Deal?", "Archenemy? I’m just ramping!",
-  "Nobody attacks the Ghostly Prison player", "Kill the planeswalker!", "Bolt the Bird!", "Chump block? Sure, why not",
+  "I’m basically dead on board", "Why is everyone attacking me?", "You don’t attack me, I don’t attack you. Deal?",
+  "Kill the planeswalker!",
   // The stack
-  "In response… in response… in response…", "Wait, what’s on the stack?", "Whose trigger is this?", "Missed trigger!",
-  "Can I take that back?", "Hold on, I have a response", "Two blue open. Be afraid.", "Passing with four open. Guess.",
-  "Is that a counterspell face?", "Teferi’s Protection. See ya!", "Cyclonic Rift, overloaded, end of turn",
-  "Wrath? In this economy?", "Toxic Deluge for 20, sorry", "Farewell, choose all six", "Armageddon: friendship ended",
-  "Blood Moon is fine, trust me", "Winter Orb: nobody untaps", "Stax is a love language",
+  "Wait, what’s on the stack?", "Whose trigger is this?", "Can I take that back?", "Hold on, I have a response",
+  "Two blue open. Be afraid.", "Is that a counterspell face?", "Cyclonic Rift, overloaded, end of turn",
   // Combos and bans
-  "Thassa’s Oracle wins again", "Can I just show you the combo?", "It’s a loop. Trust me.",
-  "Heliod plus Ballista, how original", "Craterhoof! Count it up!", "Underworld Breach, here we go", "I scoop to the combo",
-  "Infinite mana, now what?", "RIP Mana Crypt", "Dockside: gone but not forgotten", "We don’t talk about Nadu",
-  "Is Jeweled Lotus still legal?",
+  "It’s a loop. Trust me.",
   // At the table
-  "Just a quick turn, promise", "Five-minute turn incoming", "Is it my turn? What happened?", "Did you draw for the turn?",
-  "Read the card!", "What does this card do again?", "Free mulligan, right?", "Seven lands, keep?", "One-lander, keep!",
-  "It’s 1am. One more game?", "Commander tax is now 12 mana", "Casting my commander for the sixth time",
-  "Shuffle better!", "Fetch, crack, shuffle… still shuffling", "Swords to Plowshares: enjoy the life",
-  "Beast Within: here, have a 3/3", "Chaos Warp: pray for a land", "Salt is a condiment, not a strategy",
-  "Your commander’s back in the zone. Again.",
+  "Five-minute turn incoming", "Is it my turn? What happened?", "Read the card!", "What does this card do again?",
+  "One-lander, keep!", "Shuffle better!",
   // Picked from what other Commander tables say (Adam's list, September 2026)
   "In response… I am sad.", "Sadness on the stack. Sadness resolves.", "Pact the turn-one Sol Ring. Send a message.",
-  "He played a Sol Ring. Time to scoop.", "2, 4, 6, 8, 9. Tooth and Nail, entwined!", "I’m not the threat… oh look, I won.",
-  "Seven mana, nothing to do!", "All aboard the value train!", "He’s ramping, get him!", "You put WHAT in your deck? Who hurt you?",
-  "Omnath is just the Kool-Aid Man.", "Careful, this deck has a Blood Moon in it", "We’re all playing for second place.",
-  "Threat order: combo, then blue, then you.", "So you have chosen death…", "Always the kingmaker, never the king.",
-  "Let’s play pauper while you finish your turn.", "You can’t kill me! I die in response!", "Which card? Dis card.",
-  "Ob Nixilis? You mean Bob Noxious.", "Relentless Dead? That’s Fred.", "Just an honest man playing honest cards.",
-  "Temple of the False God: the fifth land.", "Turn one Bojuka Bog. That is all.", "I would have won next turn.",
-  "The non-blue player: “I’ll allow it.”", "Turn one: Sol Ring, Signet, pass.", "Searched your library? I cast Archive Trap.",
-  "Blocking your turn-two threat with a land.", "Not picking on you. We know that deck.", "Easy there, Rampy McRamperson.",
-  "Elesh Norn resolves. Collective groan.", "“I got this.” (Concedes next turn.)", "Threat assessment: what have we learned?",
-  "I block your sorcery. First strike!", "That’s my turn… wait, I forgot my triggers.", "SOOOUL RIIING!",
-  "In response, I tap three and lose.", "“I play a land.” “Countered.”", "Pass priority. Use YOUR counterspell!",
-  "Permanent exile. (Rips card in half.)", "IT’S MY TURN! (It isn’t.)", "Kodama’s Reach? HE’S COMBOING!",
-  "Rolls the die. One to six, it’s you.", "Ooh, a counter! A piece of candy!", "Kill him, he has all his colours!",
-  "You get a land! And you get a land!", "I scoop in response. (Doesn’t scoop.)", "GO GO ELVISH MYSTIC!", "POP THE DISK!",
-  "Solemn Simulacrum is Sad Robot.", "Sakura-Tribe Elder? That’s Steve.", "Stormtide Leviathan is Big Fish.", "IT’S A FROG!",
-  "Najeela attacks. BUT WAIT, THERE’S MORE!", "HE’S RUMPING!", "Float one. …Nah, that’s it.", "Fifteen squirrels just blocked Emrakul.",
-  "It’s casual… until Sol Ring into Signet.",
-];
-/* A few jokes aimed at a random regular. */
-const SPLASH_AT = [
-  "{name}, do you pay the one?", "{name} is definitely the threat", "{name} swears it’s a 7", "{name} has two blue open…",
-  "{name} is still thinking about their turn…", "{name} has nothing, apparently", "Don’t trust {name}’s politics",
-  "{name}, it’s your turn!", "{name}, did you pay for Rhystic Study?", "{name} says it’s casual",
-  "{name} is ramping. Get them!", "{name} would have won next turn", "Kill {name}, they have all their colours!",
-  "{name} is not the threat. (They are.)", "{name}, which card? Dis card.",
+  "He played a Sol Ring. Time to scoop.", "I’m not the threat… oh look, I won.", "You can’t kill me! I die in response!",
+  "Which card? Dis card.", "Just an honest man playing honest cards.", "I would have won next turn.",
+  "Easy there, Rampy McRamperson.", "Elesh Norn resolves. Collective groan.", "“I got this.” (Concedes next turn.)",
+  "In response, I tap three and lose.", "Permanent exile. (Rips card in half.)", "Ooh, a counter! A piece of candy!",
+  "GO GO ELVISH MYSTIC!", "IT’S A FROG!",
 ];
 let splashText = "";
-let splashLive = false;
-function splashData() {
-  const now = new Date(), md = (now.getMonth() + 1) * 100 + now.getDate();
-  const out = [];
-  try { out.push("Happy " + now.toLocaleDateString("en-AU", { weekday: "long" }) + "!"); } catch (e) { /* no locale support */ }
-  if (md === 1031) out.push("Happy Halloween!", "Spooky season!");
-  else if (md >= 1001 && md <= 1030) out.push("Spooky season!");
-  if (md >= 1224 && md <= 1226) out.push("Merry Christmas!");
-  if (md === 101) out.push("Happy New Year!");
-  if (md === 805) out.push("Happy birthday, Magic!");
-  if (state.phase !== "live" || !state.games.length) return out;
-  const st = computeStats(state.games);
-  const leader = sortPlayers(st.players, "wins")[0];
-  if (leader && leader.wins) out.push(leader.name + " leads the pod!");
-  st.players.filter((p) => p.streak >= 2).forEach((p) => out.push(p.name + " is on a " + p.streak + "-game win streak!"));
-  const last = state.games[0];
-  if (last && last.winner != null) out.push("GG, " + last.seats[last.winner].player + "!");
-  out.push(plural(state.games.length, "game") + " logged!");
-  if (st.cmds.length > 2) out.push(st.cmds.length + " different decks so far!");
-  if (st.fastest) out.push("Record win: turn " + st.fastest.turn + "!");
-  const top = sortDecks(st.cmds, "wins")[0];
-  if (top && top.wins > 1) out.push(shortName(top.commander) + " has " + top.wins + " wins!");
-  const regulars = st.players.filter((p) => onRoster(p.name));
-  if (state.roster.length) {
-    const who = state.roster[Math.floor(Math.random() * state.roster.length)];
-    out.push(SPLASH_AT[Math.floor(Math.random() * SPLASH_AT.length)].replace("{name}", who));
-  }
-  if (regulars.length) {
-    const p = regulars[Math.floor(Math.random() * regulars.length)];
-    const pick = picksFor(p.name, 1, 0).picks[0];
-    if (pick) out.push("Psst, " + p.name + ": try " + shortName(pick.name) + "!");
-  }
-  return out;
-}
 function nextSplash() {
-  const data = splashData();
-  const pool = data.length && Math.random() < 0.25 ? data : SPLASHES;
   let s = splashText;
-  for (let i = 0; i < 6 && s === splashText; i++) s = pool[Math.floor(Math.random() * pool.length)];
+  for (let i = 0; i < 6 && s === splashText; i++) s = SPLASHES[Math.floor(Math.random() * SPLASHES.length)];
   splashText = s;
   const el = $("#splash");
   el.textContent = s;
@@ -5101,7 +5267,18 @@ function toast(msg, actLabel, act) {
 /* ---------- loading and refreshing ---------- */
 let retryTimer = 0;
 let retryDelay = 5000;
-function applyLedger(ledger) {
+/* The last ledger this browser loaded, so the page shows games straight away while the sheet (which can take a while
+   to wake up) sends the latest. */
+const LEDGER_CACHE = "podLedger.cache.v1";
+function cachedLedger() {
+  try {
+    const c = JSON.parse(localStorage.getItem(LEDGER_CACHE) || "null");
+    return c && c.ledger && Array.isArray(c.ledger.games) ? c.ledger : null;
+  } catch (e) { return null; }
+}
+function applyLedger(ledger, fromCache) {
+  state.stale = !!fromCache;
+  if (!fromCache) { try { localStorage.setItem(LEDGER_CACHE, JSON.stringify({ at: Date.now(), ledger: ledger })); } catch (e) { /* storage full or blocked */ } }
   const list = ledger && Array.isArray(ledger.games) ? ledger.games : [];
   state.games = list.map((g) => normaliseGame(g.id, g)).filter(Boolean).sort(byNewest);
   state.podName = ledger && typeof ledger.podName === "string" ? tidy(ledger.podName, 40) : "";
@@ -5118,7 +5295,6 @@ function applyLedger(ledger) {
   state.loadError = "";
   state.refreshError = false;
   render();
-  if (!splashLive) { splashLive = true; nextSplash(); }
 }
 function refresh() {
   if (!backend.ok || saving) return;
@@ -5149,6 +5325,16 @@ function bindEvents() {
     const star = t.closest("[data-star]");
     if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
+    const gh = t.closest("[data-games-how]");
+    if (gh) { state.gamesHow = gh.dataset.gamesHow; render(); return; }
+    if (t.closest("[data-games-clear]")) { state.gamesHow = ""; state.gamesQuery = ""; $("#gamesSearch").value = ""; render(); return; }
+    const jump = t.closest("[data-jump]");
+    if (jump) {
+      const k = jump.dataset.jump, h = document.getElementById(k);
+      const el = document.querySelector('[data-chart="' + k + '"]') || (h && h.closest(".chart, .panel"));
+      if (el) el.scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" });
+      return;
+    }
     if (t.closest("#themeBtn")) { cycleTheme(); return; }
     if (t.closest("#dyslexiaBtn")) { toggleDyslexia(); return; }
     const more = t.closest("#plMorePicks");
@@ -5345,6 +5531,7 @@ function bindEvents() {
   $("#period").addEventListener("change", (e) => { state.period = e.target.value; render(); });
   $("#cmdPlayer").addEventListener("change", (e) => { state.cmdPlayer = e.target.value; render(); });
   $("#gamesPlayer").addEventListener("change", (e) => { state.gamesPlayer = e.target.value; render(); });
+  $("#gamesSearch").addEventListener("input", (e) => { state.gamesQuery = e.target.value; render(); });
   $("#retryBtn").addEventListener("click", () => { state.loadError = ""; render(); clearTimeout(retryTimer); retryDelay = 5000; refresh(); });
   $("#shareDone").addEventListener("click", () => $("#shareDialog").close());
   $("#shareDialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
@@ -5580,6 +5767,10 @@ function start() {
   nextSplash();
   const fromHash = location.hash.replace(/^#/, "");
   if (VIEWS.indexOf(fromHash) >= 0 && fromHash !== "log") state.view = fromHash;
+  const cached = backend.ok && cachedLedger();
+  if (cached) {
+    try { applyLedger(cached, true); } catch (e) { state.phase = "loading"; state.stale = false; }
+  }
   render();
   if (backend.ok) {
     refresh();
