@@ -119,8 +119,8 @@ web apps. Use a personal Google account instead.
 - **Light and dark:** the button next to "Log a game" cycles Auto, Light and Dark, remembered per browser.
 - **Dyslexia-friendly font:** the switch at the bottom of the page changes the whole app to OpenDyslexic, with no italics
   or all-capitals and a little more room between words and lines. The font comes from jsDelivr's copy of Fontsource
-  (`@fontsource/opendyslexic@5.3.0`) and only downloads once someone turns the switch on. It's remembered per device
-  (`podLedger.dyslexia` in the browser's storage), so it only changes things for the person who turned it on.
+  (`@fontsource/opendyslexic@5.3.0`) and only downloads once someone turns the switch on. It isn't remembered: every
+  visit starts with the normal font, and the switch only changes the page for the person who pressed it.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the main commander
   of whoever leads the standings for the chosen period.
@@ -129,11 +129,11 @@ web apps. Use a personal Google account instead.
   cards and open full size in Drive. Replace or Remove works when editing a game; a removed photo stays in the Drive
   folder, so delete it there if it should go for good.
 - **Home screen:** the site has an icon and a web app manifest, so "Add to Home Screen" (iPhone, from Safari's Share
-  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars. On an iPhone the
-  page runs up behind the clock and the Dynamic Island, both from the home-screen icon and in Safari on iOS 26 or
-  later. Once the tab bar sticks to the top, its frosted glass carries on up behind the clock (`.status-shade`, switched
-  by the `tabbar-stuck` class). Older Safari keeps a plain strip there instead; the page sets its colour to match the
-  theme picked with the Auto/Light/Dark button and fades its top edge into it.
+  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars. Opened from the
+  home-screen icon on an iPhone, the page runs up behind the clock and the Dynamic Island, and once the tab bar sticks
+  to the top its frosted glass carries on up behind the clock (`.status-shade`, switched by the `tabbar-stuck` class).
+  Safari keeps a plain strip behind the clock that no web page can draw into (checked on iOS 26 in September 2026);
+  the page sets its colour to match the theme picked with the Auto/Light/Dark button and fades its top edge into it.
 - **Deleting a game** asks first in a pop-up that names the game. After deleting there's an Undo, and the row stays in
   the sheet marked `deleted`.
 - **Weekly backups:** every Monday between midnight and 1am, a time-driven trigger runs `weeklyBackup`, which copies the
