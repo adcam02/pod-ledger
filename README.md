@@ -124,6 +124,17 @@ web apps. Use a personal Google account instead.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the main commander
   of whoever leads the standings for the chosen period.
+- **Commander colours:** the gradients, glows and background tint follow the colour identity of the all-time leader's
+  main commander (`applyCmdColours`, with the shades in `MANA_TONES` and the printed colour order in `CI_ORDER`). One
+  colour blends light to deep, two blend first to second, and with three the first two blend and the third is the
+  accent. Four or five colours, and colourless, keep the usual pink, violet and blue. White shows as gold and black as a
+  smoky violet so both stand out. In the local preview, the "Preview leader" picker in the corner tries other
+  commanders.
+- **Game cards:** the winner's commander art across the top with how they won, the date, the winner and their deck;
+  then turn, length and player count; the finishing order; the story, card of the game, notes and board photo; and
+  Share, Edit and Delete at the bottom (Games tab only). Each card's edges take its winner's colours.
+- **Mana symbols** are Scryfall's official pictures (`svgs.scryfall.io/card-symbols/W.svg` and so on), with the letter
+  underneath in case a picture can't load.
 - **Board photos:** the log form's Extras section takes one photo per game (camera or photo library). The page shrinks
   it to 1600 pixels on the long side before it uploads, so it goes up quickly over phone data. Photos show on the game
   cards and open full size in Drive. Replace or Remove works when editing a game; a removed photo stays in the Drive
