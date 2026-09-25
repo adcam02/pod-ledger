@@ -132,7 +132,8 @@ web apps. Use a personal Google account instead.
   commanders.
 - **Game cards:** the winner's commander art across the top with how they won, the date, the winner and their deck;
   then turn, length and player count; the finishing order; the story, card of the game, notes and board photo; and
-  Share, Edit and Delete at the bottom (Games tab only). Each card's edges take its winner's colours.
+  Share, Edit and Delete at the bottom (Games tab only). Each card's edges take its winner's colours, or gold for a
+  four- or five-colour deck, like a multicolour card's frame.
 - **Mana symbols** are Scryfall's official pictures (`svgs.scryfall.io/card-symbols/W.svg` and so on), with the letter
   underneath in case a picture can't load.
 - **Board photos:** the log form's Extras section takes one photo per game (camera or photo library). The page shrinks
