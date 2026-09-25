@@ -129,10 +129,11 @@ web apps. Use a personal Google account instead.
   cards and open full size in Drive. Replace or Remove works when editing a game; a removed photo stays in the Drive
   folder, so delete it there if it should go for good.
 - **Home screen:** the site has an icon and a web app manifest, so "Add to Home Screen" (iPhone, from Safari's Share
-  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars. Opened that way on
-  an iPhone, the page runs up behind the clock and the Dynamic Island, with a soft shade that frosts over once you
-  scroll. In a Safari tab, iOS keeps a plain strip behind the clock; the page sets its colour to match the theme
-  picked with the Auto/Light/Dark button, and fades its top edge into it.
+  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars. On an iPhone the
+  page runs up behind the clock and the Dynamic Island, both from the home-screen icon and in Safari on iOS 26 or
+  later. Once the tab bar sticks to the top, its frosted glass carries on up behind the clock (`.status-shade`, switched
+  by the `tabbar-stuck` class). Older Safari keeps a plain strip there instead; the page sets its colour to match the
+  theme picked with the Auto/Light/Dark button and fades its top edge into it.
 - **Deleting a game** asks first in a pop-up that names the game. After deleting there's an Undo, and the row stays in
   the sheet marked `deleted`.
 - **Weekly backups:** every Monday between midnight and 1am, a time-driven trigger runs `weeklyBackup`, which copies the
