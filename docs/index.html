@@ -21,7 +21,7 @@
     document.documentElement.setAttribute("data-theme", t);
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute("content", t === "dark" ? "#07060E" : "#F4F1FF"); });
   }
-  if (navigator.standalone) document.documentElement.classList.add("standalone");
+  if (navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) document.documentElement.classList.add("standalone");
   if (localStorage.getItem("podLedger.dyslexia") === "1") document.documentElement.classList.add("dyslexia");
 } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -188,14 +188,17 @@ figure { margin: 0; }
   -webkit-backdrop-filter: saturate(1.2) blur(10px); backdrop-filter: saturate(1.2) blur(10px);
   border-bottom: 1px solid var(--line);
 }
-/* Opened from a home-screen icon, the page runs up behind the clock and the Dynamic Island. This strip keeps the
-   (always white) clock readable: a soft shadow over the page at the top, then frosted once the page scrolls under it.
-   In a browser tab the strip has no height. */
-.status-shade {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: env(safe-area-inset-top, 0px); pointer-events: none;
-  background: linear-gradient(rgba(7, 6, 14, .42), rgba(7, 6, 14, 0));
+/* On phones that let the page run behind the clock and the Dynamic Island (Safari on iOS 26, or opened from the home
+   screen), this strip covers that area. It stays clear, so the page shows right to the top, until the tab bar sticks
+   under the clock; then it takes the tab bar's frosted glass, so the header reaches the top of the phone. Where the
+   page can't go behind the clock, the strip has no height. */
+.status-shade { position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: env(safe-area-inset-top, 0px); pointer-events: none; }
+.tabbar-stuck .status-shade {
+  background: color-mix(in oklab, var(--bg) 62%, transparent); /* the tab bar's glass */
+  -webkit-backdrop-filter: saturate(1.2) blur(10px); backdrop-filter: saturate(1.2) blur(10px);
 }
-.is-scrolled .status-shade { background: var(--status-shade, rgba(28, 21, 69, .86)); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+/* From the home screen the clock is always white: over the light theme it needs a soft shadow behind it. */
+:root.standalone:not(.tabbar-stuck) .status-shade { background: var(--clock-shade, none); }
 .tabbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; }
 .tabs { display: flex; gap: clamp(14px, 3.2vw, 28px); min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -987,14 +990,13 @@ select.in.first-pick { max-width: 20rem; }
 }
 :root[data-look] .masthead, :root[data-look] main, :root[data-look] .filterbar, :root[data-look] .page-foot, :root[data-look] .banner { position: relative; z-index: 1; }
 .hero-cap { display: none; }
-/* In a Safari tab, iOS paints the strip behind the clock in the theme colour. Fading the top of the page into that
-   colour lets the two meet without a line. From the home screen the page runs behind the clock instead. */
+/* Where iOS keeps its own plain strip behind the clock (Safari before iOS 26), fading the top of the page into the
+   theme colour lets the two meet without a line. Where the page runs behind the clock, the fade is left off. */
 :root[data-look] body::before {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 1; pointer-events: none;
   background: linear-gradient(var(--bg), transparent);
 }
-@media (display-mode: standalone) { :root[data-look] body::before { display: none; } }
-:root.standalone body::before { display: none; }
+:root.under-status-bar body::before { display: none; }
 
 :root[data-look="arcade"] {
   --bg: #F4F1FF; --surface: #FFFFFF; --surface-2: #F3EFFF; --ink: #1C1545; --ink-2: #3D3570; --muted: #6E6699;
@@ -1005,6 +1007,7 @@ select.in.first-pick { max-width: 20rem; }
   --grad-text: linear-gradient(90deg, #E53FC4, #7C5CF0 55%, #1FA6E0);
   --font-display: "Space Grotesk", "Barlow Semi Condensed", sans-serif;
   --shadow: 0 8px 30px -12px rgba(60, 40, 140, .25);
+  --clock-shade: linear-gradient(rgba(7, 6, 14, .35), rgba(7, 6, 14, 0));
   --look-bg: radial-gradient(40% 45% at 8% 8%, rgba(255, 110, 220, .30), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(90, 210, 255, .30), transparent 70%),
     radial-gradient(50% 50% at 50% 105%, rgba(150, 110, 255, .28), transparent 70%);
 }
@@ -1014,7 +1017,7 @@ select.in.first-pick { max-width: 20rem; }
     --bg: #07060E; --surface: #13111F; --surface-2: #1B1830; --ink: #F3F1FF; --ink-2: #CAC5F1; --muted: #8F89C4;
     --line: #27234A; --line-strong: #3B3571; --mythic: #FF4FD8; --mythic-ink: #1B0318; --mythic-soft: #3B1238; --focus: #8FD8FF;
     --hero-opacity: .3; --glass: rgba(24, 21, 44, .55); --glass-line: rgba(255, 255, 255, .10); --glass-hi: rgba(255, 255, 255, .06);
-    --status-shade: rgba(7, 6, 14, .8);
+    --clock-shade: none;
     --grad-text: linear-gradient(90deg, #FF6ADF, #A78BFA 55%, #4FD8FF);
     --shadow: 0 10px 40px -12px rgba(0, 0, 0, .7);
     --look-bg: radial-gradient(40% 45% at 8% 8%, rgba(255, 79, 216, .42), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(64, 200, 255, .36), transparent 70%),
@@ -1027,7 +1030,7 @@ select.in.first-pick { max-width: 20rem; }
   --bg: #07060E; --surface: #13111F; --surface-2: #1B1830; --ink: #F3F1FF; --ink-2: #CAC5F1; --muted: #8F89C4;
   --line: #27234A; --line-strong: #3B3571; --mythic: #FF4FD8; --mythic-ink: #1B0318; --mythic-soft: #3B1238; --focus: #8FD8FF;
   --hero-opacity: .3; --glass: rgba(24, 21, 44, .55); --glass-line: rgba(255, 255, 255, .10); --glass-hi: rgba(255, 255, 255, .06);
-  --status-shade: rgba(7, 6, 14, .8);
+  --clock-shade: none;
   --grad-text: linear-gradient(90deg, #FF6ADF, #A78BFA 55%, #4FD8FF);
   --shadow: 0 10px 40px -12px rgba(0, 0, 0, .7);
   --look-bg: radial-gradient(40% 45% at 8% 8%, rgba(255, 79, 216, .42), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(64, 200, 255, .36), transparent 70%),
@@ -5175,9 +5178,15 @@ function bindEvents() {
   document.addEventListener("focusout", (e) => { if (e.target.closest && e.target.closest("[data-tip]")) hideTip(); });
   document.addEventListener("pointerdown", (e) => { if (!(e.target.closest && e.target.closest("[data-tip], #raceHit"))) hideTip(); });
   window.addEventListener("scroll", hideTip, { passive: true });
-  const markScrolled = () => document.documentElement.classList.toggle("is-scrolled", window.scrollY > 4);
-  window.addEventListener("scroll", markScrolled, { passive: true });
-  markScrolled();
+  const shade = $(".status-shade"), bar = $(".tabbar");
+  const markTop = () => {
+    const inset = shade.offsetHeight; // the clock and Dynamic Island's height, or 0 where the page can't go behind them
+    document.documentElement.classList.toggle("under-status-bar", inset > 0);
+    document.documentElement.classList.toggle("tabbar-stuck", inset > 0 && bar.getBoundingClientRect().top <= inset + 1);
+  };
+  window.addEventListener("scroll", markTop, { passive: true });
+  window.addEventListener("resize", markTop);
+  markTop();
   document.addEventListener("error", (e) => {
     const img = e.target;
     if (img && img.tagName === "IMG" && img.dataset && img.dataset.photo) {
