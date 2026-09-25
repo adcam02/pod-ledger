@@ -59,11 +59,6 @@
   --pip-w: #F8F2D2; --pip-u: #A9D6F1; --pip-b: #CBC2BE; --pip-r: #F4A68B; --pip-g: #9FD1AF; --pip-c: #D3CDCA;
   --pip-ink: #1C1A18;
 
-  --frame-w: #DDD3B1; --frame-u: #2F6DA3; --frame-b: #3B3431; --frame-r: #B4432D;
-  --frame-g: #2E6B47; --frame-m: #C9A24A; --frame-c: #A9B0B7; --frame-x: #6A7480;
-  --frame-ink-w: #3A3322; --frame-ink-u: #EEF4FA; --frame-ink-b: #EFE9E6; --frame-ink-r: #FFF1EC;
-  --frame-ink-g: #EEF7F1; --frame-ink-m: #3A2C0B; --frame-ink-c: #22272C; --frame-ink-x: #FFFFFF;
-
   --font-display: "Eczar", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-ui: "Barlow Semi Condensed", "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --font-flavour: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
@@ -81,7 +76,6 @@
     --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
     --series-other: #4A545E; --grid: #232B33; --axis: #37424D;
     --div-pos: #3987e5; --div-neg: #e66767; --div-mid: #383835;
-    --frame-b: #4B423E; --frame-x: #5B6570;
   }
 }
 :root[data-theme="dark"] {
@@ -96,7 +90,6 @@
   --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
   --series-other: #4A545E; --grid: #232B33; --axis: #37424D;
   --div-pos: #3987e5; --div-neg: #e66767; --div-mid: #383835;
-  --frame-b: #4B423E; --frame-x: #5B6570;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -341,60 +334,93 @@ select.in { max-width: none; }
 /* ---------- Mana pips ---------- */
 .pips { display: inline-flex; gap: 2px; vertical-align: middle; flex: none; }
 .pip {
+  position: relative; overflow: hidden;
   display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
   font: 700 9px/1 var(--font-ui); font-style: normal; color: var(--pip-ink);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28), 0 1px 0 rgba(0, 0, 0, .28);
 }
 .pip-w { background: var(--pip-w); } .pip-u { background: var(--pip-u); } .pip-b { background: var(--pip-b); }
 .pip-r { background: var(--pip-r); } .pip-g { background: var(--pip-g); } .pip-c { background: var(--pip-c); }
-.pips.sm .pip { width: 13px; height: 13px; font-size: 7.5px; }
+.pip img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.pips.sm .pip { width: 15px; height: 15px; font-size: 7.5px; }
 .pips.md .pip { width: 18px; height: 18px; font-size: 10px; }
 .pips.lg .pip { width: 22px; height: 22px; font-size: 11px; }
 
 /* ---------- Game cards: a Magic card frame ---------- */
-.mtgcard {
-  --frame: var(--frame-x); --frame-ink: var(--frame-ink-x);
-  --edge: color-mix(in oklab, var(--frame) 58%, #000 42%);
+/* ---------- Game cards: the winner's art up top, then the numbers, the finishing order and the story ---------- */
+.gcard {
+  --ga: #8B93A1; --gb: #5B6472; /* the winner's colours, set on each card */
   container-type: inline-size;
-  position: relative;
-  padding: 8px 8px 6px;
-  border-radius: 14px;
-  background: var(--frame);
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--frame) 70%, #000 30%), var(--shadow);
-  color: var(--ink);
+  position: relative; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 18px;
+  background: var(--surface); box-shadow: var(--shadow); color: var(--ink);
 }
-.mc-title, .mc-type {
-  position: relative; z-index: 1;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 6px 10px;
-  border: 1px solid var(--edge); border-radius: 8px;
-  background: color-mix(in oklab, var(--frame) 22%, var(--surface));
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .18);
+.gcard::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; z-index: 3; background: linear-gradient(90deg, var(--ga), var(--gb)); }
+.gc-hero {
+  position: relative; aspect-ratio: 16 / 9; min-height: 180px; color: #fff;
+  background: radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--ga) 70%, #0B0916), transparent 70%),
+    radial-gradient(120% 90% at 100% 100%, color-mix(in oklab, var(--gb) 70%, #0B0916), transparent 70%), #0B0916;
 }
-.mc-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
-.mc-art, .mc-text { margin: 5px 6px 0; border: 1px solid var(--edge); }
-.mc-art { padding: 10px 12px; background: color-mix(in oklab, var(--frame) 12%, var(--surface-2)); }
-.mc-type { margin-top: 5px; font-size: 15px; font-weight: 600; }
-.mc-type time { flex: none; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
-.mc-text { display: grid; gap: 7px; padding: 10px 12px 24px; background: color-mix(in oklab, var(--frame) 7%, var(--surface)); font-size: 15.5px; }
-.mc-text p { margin: 0; }
-.mc-key span { margin-right: 5px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.mc-flavour {
-  padding-top: 7px; border-top: 1px solid color-mix(in oklab, var(--frame) 30%, var(--line));
-  font-family: var(--font-flavour); font-style: italic; font-size: 16.5px; line-height: 1.4; color: var(--ink-2); white-space: pre-line;
+@container (min-width: 520px) { .gc-hero { aspect-ratio: 2.7 / 1; } }
+.gc-pic { position: absolute; inset: 0; display: flex; gap: 2px; }
+/* A shade at the top and bottom so the words stay readable over any art. */
+.gc-hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 6, 18, .45) 0%, rgba(8, 6, 18, 0) 26%, rgba(8, 6, 18, .1) 48%, rgba(8, 6, 18, .9) 100%);
 }
-.mc-foot { display: flex; align-items: center; min-height: 28px; padding: 5px 6px 0; }
-.mc-meta { font-size: 11.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--frame-ink); padding-right: 72px; }
-.mc-pt {
-  position: absolute; right: 16px; bottom: 19px; z-index: 2; min-width: 46px; padding: 3px 10px; text-align: center;
-  border: 1px solid var(--edge); border-radius: 8px; background: color-mix(in oklab, var(--frame) 22%, var(--surface));
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .22); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums;
+.gc-top { position: absolute; z-index: 2; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.gc-chip {
+  padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(8, 6, 18, .5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; white-space: nowrap;
 }
-.mc-pic {
-  display: flex; gap: 2px; margin: -10px -12px 10px; aspect-ratio: 16 / 9; overflow: hidden;
-  background: color-mix(in oklab, var(--frame) 30%, var(--surface-2)); border-bottom: 1px solid var(--edge);
+.gc-how { background: linear-gradient(90deg, var(--ga), var(--gb)); border-color: rgba(255, 255, 255, .28); text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.gc-title { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 26px; }
+.gc-eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .78); }
+.gc-winner { margin: 2px 0 5px; font-family: var(--font-display); font-size: clamp(24px, 7.5cqi, 32px); line-height: 1.05; color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, .45); }
+.gc-deck { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 15px; font-weight: 600; color: rgba(255, 255, 255, .9); }
+.gc-hero .art-credit { z-index: 2; right: 10px; bottom: 7px; padding: 0; background: none; color: rgba(255, 255, 255, .62); }
+.gc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-bottom: 1px solid var(--line); }
+.gc-stats div { padding: 11px 8px 12px; text-align: center; }
+.gc-stats div + div { border-left: 1px solid var(--line); }
+.gc-stats dt { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.gc-stats dd { margin: 3px 0 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gc-seats { list-style: none; margin: 0; padding: 4px 0; }
+.gc-seats li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 10px 16px; }
+.gc-seats li + li { border-top: 1px solid var(--line); }
+.gc-seats li.won { background: linear-gradient(90deg, color-mix(in oklab, var(--ga) 16%, transparent), transparent 75%); }
+.gc-place {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--muted); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-@container (min-width: 460px) { .mc-pic { aspect-ratio: 21 / 9; } }
+.gc-seats li.won .gc-place { background: linear-gradient(135deg, var(--ga), var(--gb)); color: #fff; box-shadow: 0 4px 14px -4px var(--ga); }
+.gc-place .icon { width: 16px; height: 16px; }
+.gc-who { display: grid; min-width: 0; }
+.gc-name { font-size: 16px; font-weight: 700; }
+.gc-cmd { font-size: 14.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.gc-cmd a { color: inherit; text-decoration: none; }
+.gc-cmd a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.gc-ko { font-size: 13px; color: var(--muted); }
+.gc-story { display: grid; gap: 10px; padding: 14px 16px 16px; border-top: 1px solid var(--line); font-size: 15.5px; }
+.gc-story p { margin: 0; }
+.gc-key span { margin-right: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.gc-notes { padding-left: 12px; border-left: 3px solid var(--ga); font-family: var(--font-flavour); font-style: italic; font-size: 16.5px; line-height: 1.4; color: var(--ink-2); white-space: pre-line; }
+.gc-photo { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.gc-photo img { display: block; width: 100%; max-height: 360px; object-fit: cover; }
+.gc-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.gc-act {
+  appearance: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 13px; cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: none; color: var(--ink-2); font-size: 14px; font-weight: 600;
+}
+.gc-act:hover { color: var(--ink); border-color: var(--ink-2); }
+.gc-act .icon { width: 15px; height: 15px; }
+.gc-del:hover { color: var(--bad); border-color: var(--bad); }
+.gcard.is-new { animation: card-flash 1.8s ease-out 1; }
+@keyframes card-flash {
+  from { box-shadow: 0 0 0 4px var(--mythic), var(--shadow); }
+  to { box-shadow: 0 0 0 0 transparent, var(--shadow); }
+}
+@media (prefers-reduced-motion: reduce) { .gcard.is-new { animation: none; } }
 .pic-half { position: relative; flex: 1 1 0; min-width: 0; }
 .pic-half img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .art-credit {
@@ -402,35 +428,10 @@ select.in { max-width: none; }
   background: rgba(0, 0, 0, .5); color: #fff; font-size: 10.5px; font-weight: 600; letter-spacing: .03em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.mc-seats { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.mc-seats li { display: grid; grid-template-columns: 18px minmax(4.5em, auto) minmax(0, 1fr) auto; align-items: center; column-gap: 8px; font-size: 15px; }
-.mc-seats .mark { display: grid; place-items: center; color: var(--mythic); }
-.mc-seats .mark .icon { width: 16px; height: 16px; }
-.mc-seats .p { font-weight: 700; }
-.mc-seats .c { min-width: 0; color: var(--ink-2); }
-.mc-seats li.won .p { color: var(--mythic); }
 .guest-tag {
   display: inline-block; margin-left: 5px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--line-strong);
   font: 700 10.5px/1.3 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); vertical-align: 2px;
 }
-@container (max-width: 440px) {
-  .mc-seats li { grid-template-columns: 18px minmax(0, 1fr) auto; grid-template-areas: "mark p pips" ". c c"; row-gap: 0; }
-  .mc-seats .mark { grid-area: mark; }
-  .mc-seats .p { grid-area: p; }
-  .mc-seats .c { grid-area: c; font-size: 14px; }
-  .mc-seats .pips { grid-area: pips; }
-}
-.mtgcard.is-new { animation: flash 1.8s ease-out 1; }
-@keyframes flash {
-  from { box-shadow: 0 0 0 4px var(--mythic), var(--shadow); }
-  to { box-shadow: 0 0 0 1px color-mix(in oklab, var(--frame) 70%, #000 30%), var(--shadow); }
-}
-@media (prefers-reduced-motion: reduce) { .mtgcard.is-new { animation: none; } }
-
-.card-stack { display: grid; gap: 24px; max-width: 700px; }
-.game-block { display: grid; gap: 4px; }
-.card-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 16px; padding-inline: 4px; font-size: 14px; }
-.card-actions.confirm span { color: var(--ink-2); font-weight: 600; }
 
 /* ---------- Commanders ---------- */
 .cmd-head, .cmd-row { display: grid; grid-template-columns: minmax(0, 1fr) 5.6em 9em; align-items: center; column-gap: 14px; }
@@ -777,9 +778,8 @@ select.in.first-pick { max-width: 20rem; }
 .mull:hover { border-color: var(--ink-2); color: var(--ink); }
 .mull[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
 @media (max-width: 420px) { .mull-name { flex-basis: 100%; } .mull { min-width: 0; flex: 1 1 0; } .mull-opts { display: flex; flex: 1 1 100%; } }
-.mc-seats .ko { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.3; }
-.mc-seats .c a, .deck-link { color: inherit; text-decoration: none; }
-.mc-seats .c a:hover, .deck-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.deck-link { color: inherit; text-decoration: none; }
+.deck-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ko-grid { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
 .mini-h { margin: 0 0 8px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .count-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
@@ -841,6 +841,7 @@ select.in.first-pick { max-width: 20rem; }
 .ctog[aria-pressed="true"] { opacity: 1; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28), 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
 .ctog.w { background: var(--pip-w); } .ctog.u { background: var(--pip-u); } .ctog.b { background: var(--pip-b); }
 .ctog.r { background: var(--pip-r); } .ctog.g { background: var(--pip-g); } .ctog.c { background: var(--pip-c); }
+.ctog .pip { width: 100%; height: 100%; font-size: inherit; box-shadow: none; }
 .roll-filters .check { min-height: 34px; font-size: 15px; }
 .roll-filters .check input:disabled + span { color: var(--muted); }
 .roll-stage { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 18px; align-items: start; }
@@ -923,9 +924,6 @@ select.in.first-pick { max-width: 20rem; }
 .photo-preview { margin: 0; max-width: min(100%, 420px); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
 .photo-preview img { display: block; width: 100%; height: auto; max-height: 320px; object-fit: cover; }
 .photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.mc-photo { display: block; margin-top: 4px; border-radius: 8px; overflow: hidden; border: 1px solid color-mix(in oklab, var(--frame) 30%, var(--line)); }
-.mc-photo img { display: block; width: 100%; max-height: 360px; object-fit: cover; }
-.card-share .icon { width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
 .rival-card { display: grid; gap: 6px; padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
 .rv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
 .rv-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; overflow-wrap: anywhere; }
@@ -1004,6 +1002,9 @@ select.in.first-pick { max-width: 20rem; }
   --line: #E4DEFA; --line-strong: #CFC6F2; --mythic: #D6249F; --mythic-ink: #FFFFFF; --mythic-soft: #FBE0F2; --focus: #6D5DF6;
   --hero-opacity: .2; --glass: rgba(255, 255, 255, .62); --glass-line: rgba(90, 70, 180, .14); --glass-hi: rgba(255, 255, 255, .7);
   --grad: linear-gradient(90deg, #FF4FD8, #8B5CF6 55%, #3FC8FF);
+  /* Glow colours as "r, g, b" for rgba(): the accent glow, the three colours along the tab bar's edge, and a soft tint.
+     The leading commander's colours replace them (see applyCmdColours). */
+  --glow: 255, 79, 216; --glow-a: 255, 79, 216; --glow-b: 139, 92, 246; --glow-c: 63, 200, 255; --soft: 167, 139, 250;
   --grad-sm: linear-gradient(90deg, #EE4FCF, #9B5CF6);
   --grad-text: linear-gradient(90deg, #E53FC4, #7C5CF0 55%, #1FA6E0);
   --font-display: "Space Grotesk", "Barlow Semi Condensed", sans-serif;
@@ -1043,7 +1044,7 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .eyebrow { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
 [data-look="arcade"] .podname-row h1 {
   letter-spacing: -.02em; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 0 18px rgba(255, 79, 216, .3));
+  filter: drop-shadow(0 0 18px rgba(var(--glow), .3));
 }
 [data-look="arcade"] .hero-cap {
   display: inline-flex; align-items: center; gap: 7px; margin: 10px 0 0; padding: 5px 12px 5px 9px; border-radius: 999px; max-width: 100%;
@@ -1055,7 +1056,7 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .hero-cap b { color: var(--ink); font-weight: 700; }
 [data-look="arcade"] .splash {
   background: rgba(18, 14, 36, .8); border-color: rgba(255, 255, 255, .14);
-  box-shadow: 0 0 26px rgba(255, 79, 216, .22), 4px 4px 0 rgba(0, 0, 0, .25);
+  box-shadow: 0 0 26px rgba(var(--glow), .22), 4px 4px 0 rgba(0, 0, 0, .25);
   text-shadow: 0 0 10px rgba(255, 243, 92, .45), 2px 2px 0 #4D4700;
 }
 
@@ -1063,23 +1064,23 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .tabbar { background: color-mix(in oklab, var(--bg) 62%, transparent); border-bottom-color: transparent; }
 [data-look="arcade"] .tabbar::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 79, 216, .55) 25%, rgba(139, 92, 246, .55) 50%, rgba(63, 200, 255, .55) 75%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--glow-a), .55) 25%, rgba(var(--glow-b), .55) 50%, rgba(var(--glow-c), .55) 75%, transparent);
 }
 [data-look="arcade"] .tab { position: relative; letter-spacing: .1em; }
 [data-look="arcade"] .tab[aria-current="page"] { color: var(--ink); border-bottom-color: transparent; }
 [data-look="arcade"] .tab[aria-current="page"]::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 2px;
-  background: var(--grad); box-shadow: 0 0 12px rgba(255, 79, 216, .7);
+  background: var(--grad); box-shadow: 0 0 12px rgba(var(--glow), .7);
 }
 
 /* Headings */
 [data-look="arcade"] .section-head h2 { font-size: 26px; letter-spacing: -.01em; }
 [data-look="arcade"] .section-head h2::after {
   content: ""; display: block; width: 56px; height: 3px; margin-top: 8px; border-radius: 2px;
-  background: var(--grad); box-shadow: 0 0 12px rgba(255, 79, 216, .5);
+  background: var(--grad); box-shadow: 0 0 12px rgba(var(--glow), .5);
 }
 [data-look="arcade"] :is(.kpi .v, .chart-head h3, .side-h, .tc-head h4, .rc-name, .quiz-result h4) { font-family: var(--font-display); }
-[data-look="arcade"] .kpi .v { background: linear-gradient(90deg, var(--ink) 40%, #A78BFA); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
+[data-look="arcade"] .kpi .v { background: linear-gradient(90deg, var(--ink) 40%, rgb(var(--soft))); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
 
 /* Frosted panels */
 [data-look="arcade"] :is(.panel, .chart, .kpis, .ladder, .cmd-list, .explain, .table-card, .seat, .ko-row, .cmdlet, .tp-empty, .speed-top, .place-tiles li) {
@@ -1092,12 +1093,12 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .seat.is-winner { border-color: #C45BF0; box-shadow: inset 0 0 0 1px #C45BF0, 0 0 26px -8px rgba(200, 90, 240, .65); }
 
 /* Standings: the leader's row carries a soft glow */
-[data-look="arcade"] .rung:first-child .rung-btn { background: linear-gradient(90deg, rgba(255, 79, 216, .12), transparent 60%); }
+[data-look="arcade"] .rung:first-child .rung-btn { background: linear-gradient(90deg, rgba(var(--glow), .12), transparent 60%); }
 [data-look="arcade"] .rung-btn:hover, [data-look="arcade"] .rung:first-child .rung-btn:hover { background: color-mix(in oklab, var(--mythic) 9%, transparent); }
-[data-look="arcade"] .dot-f.w { background: #FF4FD8; border-color: #FF4FD8; box-shadow: 0 0 8px rgba(255, 79, 216, .6); }
+[data-look="arcade"] .dot-f.w { background: rgb(var(--glow)); border-color: rgb(var(--glow)); box-shadow: 0 0 8px rgba(var(--glow), .6); }
 
 /* Buttons, toggles and fields */
-[data-look="arcade"] .btn-mythic { background: var(--grad); color: #fff; border: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), 0 10px 26px -8px rgba(255, 79, 216, .65); }
+[data-look="arcade"] .btn-mythic { background: var(--grad); color: #fff; border: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), 0 10px 26px -8px rgba(var(--glow), .65); }
 [data-look="arcade"] .btn-mythic:hover { filter: brightness(1.08) saturate(1.1); }
 [data-look="arcade"] :is(.btn-quiet, .theme-btn, .star, .chip-btn, .seg, .tog, .mull, .qopt, .pick, .chip span) {
   background-color: var(--glass); border-color: var(--glass-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -1107,7 +1108,7 @@ select.in.first-pick { max-width: 20rem; }
 /* Small toggles use a tighter pink-to-violet fill: the full three-colour gradient looks blotchy squeezed into a small button. */
 [data-look="arcade"] :is(.seg button, .pick, .mull, .qopt)[aria-pressed="true"], [data-look="arcade"] .chip input:checked + span, [data-look="arcade"] .tog-win[aria-pressed="true"] {
   background: var(--grad-sm); border-color: transparent; color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 6px 16px -8px rgba(238, 79, 207, .75);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 6px 16px -8px rgba(var(--glow), .75);
 }
 [data-look="arcade"] .confirm-dialog {
   background: color-mix(in oklab, var(--surface) 90%, transparent); border-color: var(--glass-line);
@@ -1121,9 +1122,14 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .rv-score { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 [data-look="arcade"] .rv-score i { color: inherit; }
 [data-look="arcade"] :is(.in, select) { background-color: var(--glass); border-color: var(--glass-line); }
-[data-look="arcade"] .in:focus { border-color: #A78BFA; outline: 3px solid rgba(167, 139, 250, .28); }
+[data-look="arcade"] .in:focus { border-color: rgb(var(--soft)); outline: 3px solid rgba(var(--soft), .28); }
 [data-look="arcade"] .pct-fill { background: var(--grad); }
-[data-look="arcade"] .mtgcard { box-shadow: 0 0 0 1px color-mix(in oklab, var(--frame) 70%, #000 30%), 0 18px 50px -18px color-mix(in oklab, var(--frame) 80%, transparent); }
+[data-look="arcade"] .gcard {
+  background: var(--glass); border-color: var(--glass-line); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px -30px color-mix(in oklab, var(--ga) 75%, transparent), var(--shadow);
+}
+[data-look="arcade"] :is(.gc-stats, .gc-story, .gc-foot, .gc-seats li + li, .gc-stats div + div) { border-color: var(--glass-line); }
+[data-look="arcade"] .gc-act { border-color: var(--glass-line); background: var(--glass); }
 </style>
 </head>
 <body>
@@ -1638,6 +1644,8 @@ const ICON = {
   house: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/></svg>',
   star: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 3.6Z"/></svg>',
   share: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 12.5V20h14v-7.5"/></svg>',
+  edit: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>',
+  trash: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
   camera: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
   dice: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01M12 12h.01" stroke-width="3"/></svg>',
 };
@@ -1723,17 +1731,16 @@ function ciForSeat(s) {
   return ciUnion(a, b || "");
 }
 const deckLabel = (s) => (s.partner ? s.commander + " + " + s.partner : s.commander || "Unknown commander");
-function frameOf(ci) {
-  if (!ci) return "x";
-  if (ci === "C") return "c";
-  return ci.length === 1 ? ci.toLowerCase() : "m";
+/* One mana symbol: Scryfall's official picture, with the letter underneath in case the picture can't load. */
+function pipIcon(c) {
+  return '<i class="pip pip-' + c.toLowerCase() + '" aria-hidden="true">' + c +
+    '<img src="https://svgs.scryfall.io/card-symbols/' + c + '.svg" alt="" loading="lazy" decoding="async" draggable="false"></i>';
 }
 function pipsHTML(ci, size) {
   if (!ci) return "";
   const letters = ci === "C" ? ["C"] : ci.split("");
   const label = "Colour identity: " + letters.map((c) => COLOUR_NAMES[c]).join(", ");
-  return '<span class="pips ' + (size || "") + '" role="img" aria-label="' + label + '">' +
-    letters.map((c) => '<i class="pip pip-' + c.toLowerCase() + '" aria-hidden="true">' + c + "</i>").join("") + "</span>";
+  return '<span class="pips ' + (size || "") + '" role="img" aria-label="' + label + '">' + letters.map(pipIcon).join("") + "</span>";
 }
 
 /* ---------- commander art, looked up on Scryfall and remembered in this browser ---------- */
@@ -1819,7 +1826,7 @@ function dropArt(k) {
   $$('[data-art-half="' + k + '"]').forEach((el) => {
     const box = el.parentElement;
     el.remove();
-    if (box && box.classList.contains("mc-pic") && !box.children.length) box.remove();
+    if (box && box.classList.contains("gc-pic") && !box.children.length) box.remove();
   });
 }
 function artHalfHTML(name) {
@@ -2210,15 +2217,85 @@ function renderMasthead() {
   renderHero();
 }
 /* The commander of whoever tops the standings (the deck under their name), faded behind the header. */
+/* ---------- colours from the leading commander ---------- */
+/* Each colour pair and triple in the order cards print it (Bant is green, white, blue), so the card's first colour
+   leads the blend. Four and five colours, and colourless, keep the usual pink, violet and blue. */
+const CI_ORDER = {
+  WU: "WU", UB: "UB", BR: "BR", RG: "RG", WG: "GW", WB: "WB", UR: "UR", BG: "BG", WR: "RW", UG: "GU",
+  WUG: "GWU", WUB: "WUB", UBR: "UBR", BRG: "BRG", WRG: "RGW", WBG: "WBG", WUR: "URW", UBG: "BGU", WBR: "RWB", URG: "GUR",
+};
+/* Each colour's shades: fill (buttons and glows, with white text on top), text on the light and dark themes, and the
+   pale and deep ends a one-colour deck blends between. White leans gold and black leans smoky violet, so both show up
+   on either background. */
+const MANA_TONES = {
+  W: { fill: "#D99A2B", light: "#A06A0C", dark: "#F5D27A", pale: "#F2C04F", deep: "#C27E12" },
+  U: { fill: "#2F86F6", light: "#1B63C6", dark: "#6AB8FF", pale: "#5FB4FF", deep: "#1D55C9" },
+  B: { fill: "#6C5A93", light: "#463A63", dark: "#BBAEDB", pale: "#9C8BC2", deep: "#463A66" },
+  R: { fill: "#EC4436", light: "#C42C22", dark: "#FF7466", pale: "#FF8B4D", deep: "#D32339" },
+  G: { fill: "#22A95B", light: "#15854A", dark: "#5ADB93", pale: "#5CD58A", deep: "#137F45" },
+};
+const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ");
+/* One colour: its pale-to-deep blend. Two: first to second, with the first as the accent. Three: the first two blend and
+   the third is the accent (the glow under the current tab, pressed buttons, focus rings). Null for four or five colours,
+   colourless or an unknown commander. */
+function cmdFills(ci) {
+  const order = ci && ci !== "C" ? (ci.length === 1 ? ci : CI_ORDER[ci] || "") : "";
+  if (!order) return null;
+  const t = order.split("").map((c) => MANA_TONES[c]);
+  const mono = t.length === 1;
+  const acc = mono ? t[0] : t.length === 3 ? t[2] : t[0];
+  return { order: order, t: t, mono: mono, acc: acc, a: mono ? t[0].pale : t[0].fill, b: mono ? t[0].deep : t[1].fill, accFill: mono ? t[0].deep : acc.fill };
+}
+function applyCmdColours(ci) {
+  const root = document.documentElement;
+  const f = cmdFills(ci);
+  let el = document.getElementById("cmdColours");
+  if (!f) { root.removeAttribute("data-cmd"); if (el) el.textContent = ""; return; }
+  const order = f.order;
+  if (root.getAttribute("data-cmd") === order && el && el.textContent) return;
+  const t = f.t, mono = f.mono, acc = f.acc;
+  const fillA = f.a, fillB = f.b, accFill = f.accFill;
+  const glowC = t.length === 3 ? t[2].fill : fillB;
+  const both = {
+    "--grad": "linear-gradient(90deg, " + fillA + ", " + fillB + ")",
+    "--grad-sm": "linear-gradient(90deg, " + fillA + ", " + fillB + ")",
+    "--glow": rgbOf(accFill), "--glow-a": rgbOf(fillA), "--glow-b": rgbOf(fillB), "--glow-c": rgbOf(glowC),
+  };
+  const light = Object.assign({}, both, {
+    "--grad-text": "linear-gradient(90deg, " + t[0].light + ", " + (mono ? t[0].deep : t[1].light) + ")",
+    "--mythic": acc.light, "--focus": acc.light, "--soft": rgbOf(acc.light),
+    "--mythic-soft": "color-mix(in oklab, " + accFill + " 18%, #FFFFFF)",
+    "--look-bg": "radial-gradient(40% 45% at 8% 8%, rgba(" + rgbOf(fillA) + ", .26), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(" + rgbOf(fillB) + ", .26), transparent 70%), radial-gradient(50% 50% at 50% 105%, rgba(" + rgbOf(accFill) + ", .22), transparent 70%)",
+  });
+  const dark = Object.assign({}, both, {
+    "--grad-text": "linear-gradient(90deg, " + t[0].dark + ", " + (mono ? t[0].pale : t[1].dark) + ")",
+    "--mythic": acc.dark, "--focus": acc.dark, "--soft": rgbOf(acc.dark),
+    "--mythic-soft": "color-mix(in oklab, " + accFill + " 26%, #13111F)",
+    "--look-bg": "radial-gradient(40% 45% at 8% 8%, rgba(" + rgbOf(fillA) + ", .40), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(" + rgbOf(fillB) + ", .34), transparent 70%), radial-gradient(50% 50% at 50% 105%, rgba(" + rgbOf(accFill) + ", .38), transparent 70%), linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px) 0 0 / 44px 44px, linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px) 0 0 / 44px 44px",
+  });
+  const css = (vars) => Object.keys(vars).map((k) => k + ": " + vars[k] + ";").join(" ");
+  const sel = ':root[data-look="arcade"][data-cmd]';
+  if (!el) { el = document.createElement("style"); el.id = "cmdColours"; document.head.appendChild(el); }
+  el.textContent = sel + " { " + css(light) + " }\n" +
+    "@media (prefers-color-scheme: dark) { " + sel + ':not([data-theme="light"]) { ' + css(dark) + " } }\n" +
+    sel + '[data-theme="dark"] { ' + css(dark) + " }";
+  root.setAttribute("data-cmd", order);
+}
+
 function renderHero() {
   const box = $("#hero"), cap = $("#heroCap");
   const games = state.phase === "live" ? periodGames(currentGames()) : [];
   const leader = games.length ? sortPlayers(computeStats(games).players, "wins").find((p) => p.wins > 0) : null;
   const deck = leader && leader.fav;
-  const name = deck ? deck.commander : "";
+  const sample = window.__previewCommander || ""; // set only by the local preview's sample picker
+  const name = sample || (deck ? deck.commander : "");
   const k = norm(name);
+  // The page's colours follow the all-time leader's main commander, so picking a period doesn't recolour everything.
+  const all = state.phase === "live" ? currentGames() : [];
+  const top = all.length ? sortPlayers(computeStats(all).players, "wins").find((p) => p.wins > 0) : null;
+  applyCmdColours(sample ? ciOfName(sample) || "" : top && top.fav ? ciForSeat(top.fav) : "");
   cap.hidden = !k;
-  cap.innerHTML = k ? ICON.trophy + "<span><b>" + esc(leader.name) + "</b> leads with " + esc(deckLabel(deck)) + "</span>" : "";
+  cap.innerHTML = !k ? "" : ICON.trophy + "<span>" + (sample ? "Sample: <b>" + esc(sample) + "</b>" : "<b>" + esc(leader.name) + "</b> leads with " + esc(deckLabel(deck))) + "</span>";
   if (!k) { box.innerHTML = ""; box.dataset.k = ""; return; }
   if (box.dataset.k === k && box.firstChild) return;
   box.dataset.k = k;
@@ -2340,49 +2417,59 @@ function rungHTML(p, i) {
   "</li>";
 }
 
-function gameCardHTML(g) {
+/* A card's two colours: its winner's blend (see cmdFills), the usual pink and violet for four or five colours, and
+   greys for colourless or a draw. */
+function cardColours(ci) {
+  const f = cmdFills(ci);
+  if (f) return [f.a, f.b];
+  if (!ci) return ["#8B93A1", "#5B6472"];
+  if (ci === "C") return ["#B8BEC6", "#6A7480"];
+  return ["#FF4FD8", "#8B5CF6"];
+}
+function gameCardHTML(g, footHTML) {
   const w = g.winner != null ? g.seats[g.winner] : null;
   const ci = w ? ciForSeat(w) : "";
-  const f = frameOf(ci);
-  const title = w ? deckLabel(w) : "No winner";
-  const type = w ? "Victory — " + (WT_LABEL.get(g.winType) || "Something else") : "Draw — no winner";
+  const cc = cardColours(w ? ci || "?" : "");
+  const how = w ? WT_LABEL.get(g.winType) || "Something else" : "Draw";
   const placed = hasPlaces(g);
   const rank = (i) => (i === g.winner ? 0 : placed && g.seats[i].place > 1 ? g.seats[i].place : 99);
   const order = g.seats.map((_, i) => i);
   if (placed) order.sort((a, b) => rank(a) - rank(b) || a - b);
+  const who = (s) => '<button type="button" class="plink" data-player="' + esc(norm(s.player)) + '">' + esc(s.player) + "</button>";
   const seats = order.map((i) => {
     const s = g.seats[i];
     const won = g.winner === i;
-    const how = s.outHow ? KO_LABEL.get(s.outHow).toLowerCase() : "";
+    const out = s.outHow ? KO_LABEL.get(s.outHow).toLowerCase() : "";
     const bits = [];
     if (g.first === i) bits.push("went first");
     if (s.mulls > 0) bits.push(plural(s.mulls, "mulligan"));
-    if (!won && placed && s.place > 1) bits.push(ordinal(s.place));
-    if (!won && s.outBy) bits.push("out to " + s.outBy + (how ? ", " + how : ""));
-    else if (!won && how) bits.push(how);
+    if (!won && s.outBy) bits.push("out to " + s.outBy + (out ? ", " + out : ""));
+    else if (!won && out) bits.push(out);
     if (bits.length) bits[0] = bits[0].charAt(0).toUpperCase() + bits[0].slice(1);
-    return '<li class="' + (won ? "won" : "") + '"><span class="mark">' + (won ? ICON.trophy + '<span class="sr">Winner: </span>' : "") + "</span>" +
-      '<span class="p"><button type="button" class="plink" data-player="' + esc(norm(s.player)) + '">' + esc(s.player) + "</button>" + (isGuestName(s.player) ? '<span class="guest-tag">guest</span>' : "") + "</span>" +
-      '<span class="c">' + (s.commander ? '<a href="' + esc(scryfallDeck(s)) + '" target="_blank" rel="noopener noreferrer">' + esc(deckLabel(s)) + "</a>" : esc(deckLabel(s))) +
-        (bits.length ? '<span class="ko">' + esc(bits.join(" · ")) + "</span>" : "") + "</span>" +
+    const place = won ? ICON.trophy + '<span class="sr">Winner</span>' : placed && s.place > 1 ? String(s.place) : "–";
+    return "<li" + (won ? ' class="won"' : "") + '><span class="gc-place">' + place + "</span>" +
+      '<div class="gc-who"><span class="gc-name">' + who(s) + (isGuestName(s.player) ? '<span class="guest-tag">guest</span>' : "") + "</span>" +
+        '<span class="gc-cmd">' + (s.commander ? '<a href="' + esc(scryfallDeck(s)) + '" target="_blank" rel="noopener noreferrer">' + esc(deckLabel(s)) + "</a>" : esc(deckLabel(s))) + "</span>" +
+        (bits.length ? '<span class="gc-ko">' + esc(bits.join(" · ")) + "</span>" : "") + "</div>" +
       (pipsHTML(ciForSeat(s), "sm") || "<span></span>") + "</li>";
   }).join("");
-  const lead = w
-    ? "<b>" + esc(w.player) + "</b> won" + (g.endTurn ? " on turn " + g.endTurn : "") + "."
-    : "Nobody won" + (g.endTurn ? " (stopped on turn " + g.endTurn + ")" : "") + ".";
-  const meta = [plural(g.seats.length, "player"), g.minutes ? fmtMins(g.minutes) : ""].filter(Boolean).join(" · ");
-  return '<article class="mtgcard' + (state.highlightId === g.id ? " is-new" : "") + '" id="game-' + esc(g.id) + '" style="--frame:var(--frame-' + f + ");--frame-ink:var(--frame-ink-" + f + ')">' +
-    '<header class="mc-title"><h3 class="mc-name">' + esc(title) + "</h3>" + pipsHTML(ci, "md") + "</header>" +
-    '<div class="mc-art">' + (w ? artPicHTML([w.commander, w.partner], "mc-pic") : "") + '<ul class="mc-seats">' + seats + "</ul></div>" +
-    '<div class="mc-type"><span>' + esc(type) + '</span><time datetime="' + esc(g.playedOn) + '">' + esc(fmtDate(g.playedOn, false)) + "</time></div>" +
-    '<div class="mc-text"><p>' + lead + (g.winDetail ? " " + esc(withStop(g.winDetail)) : "") + "</p>" +
-      (g.keyCard ? '<p class="mc-key"><span>Card of the game</span>' + esc(g.keyCard) + "</p>" : "") +
-      (g.notes ? '<p class="mc-flavour">' + esc(g.notes) + "</p>" : "") +
-      (g.photo ? '<a class="mc-photo" href="' + esc(photoLink(g.photo)) + '" target="_blank" rel="noopener noreferrer" title="Open the full photo">' +
-        '<img src="' + esc(photoView(g.photo)) + '" alt="Photo of the final board" loading="lazy" referrerpolicy="no-referrer" data-photo="' + esc(g.photo) + '"></a>' : "") +
-    "</div>" +
-    '<footer class="mc-foot"><span class="mc-meta">' + esc(meta) + "</span>" +
-      (g.endTurn ? '<span class="mc-pt" title="Ended on turn ' + g.endTurn + '"><span class="sr">Ended on turn </span>T' + g.endTurn + "</span>" : "") + "</footer>" +
+  const stats = [["Turn", g.endTurn ? String(g.endTurn) : "–"], ["Length", g.minutes ? fmtMins(g.minutes) : "–"], ["Players", String(g.seats.length)]];
+  const story = (g.winDetail ? "<p>" + esc(withStop(g.winDetail)) + "</p>" : "") +
+    (g.keyCard ? '<p class="gc-key"><span>Card of the game</span>' + esc(g.keyCard) + "</p>" : "") +
+    (g.notes ? '<p class="gc-notes">' + esc(g.notes) + "</p>" : "") +
+    (g.photo ? '<a class="gc-photo" href="' + esc(photoLink(g.photo)) + '" target="_blank" rel="noopener noreferrer" title="Open the full photo">' +
+      '<img src="' + esc(photoView(g.photo)) + '" alt="Photo of the final board" loading="lazy" referrerpolicy="no-referrer" data-photo="' + esc(g.photo) + '"></a>' : "");
+  return '<article class="gcard' + (state.highlightId === g.id ? " is-new" : "") + '" id="game-' + esc(g.id) + '" style="--ga:' + cc[0] + ";--gb:" + cc[1] + '">' +
+    '<header class="gc-hero">' + (w ? artPicHTML([w.commander, w.partner], "gc-pic") : "") +
+      '<div class="gc-top"><span class="gc-chip gc-how">' + esc(how) + '</span><time class="gc-chip" datetime="' + esc(g.playedOn) + '">' + esc(fmtDate(g.playedOn, false)) + "</time></div>" +
+      '<div class="gc-title">' + (w
+        ? '<span class="gc-eyebrow">Winner</span><h3 class="gc-winner">' + who(w) + '</h3><p class="gc-deck">' + esc(deckLabel(w)) + pipsHTML(ci, "sm") + "</p>"
+        : '<span class="gc-eyebrow">Draw</span><h3 class="gc-winner">No winner</h3>' + (g.endTurn ? '<p class="gc-deck">Stopped on turn ' + g.endTurn + "</p>" : "")) +
+      "</div></header>" +
+    '<dl class="gc-stats">' + stats.map((x) => "<div><dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd></div>").join("") + "</dl>" +
+    '<ol class="gc-seats">' + seats + "</ol>" +
+    (story ? '<div class="gc-story">' + story + "</div>" : "") +
+    (footHTML ? '<footer class="gc-foot">' + footHTML + "</footer>" : "") +
   "</article>";
 }
 
@@ -2426,12 +2513,10 @@ function renderGames(st, games) {
   $("#gamesPlayer").innerHTML = playerOptions(st, state.gamesPlayer);
   const list = (state.gamesPlayer ? games.filter((g) => g.seats.some((s) => norm(s.player) === state.gamesPlayer)) : games).slice().sort(byNewest);
   $("#gamesCount").textContent = plural(list.length, "game");
-  $("#gameList").innerHTML = list.length ? list.map((g) => {
-    let actions = "";
-    actions = '<div class="card-actions"><button type="button" class="link card-share" data-share-game="' + esc(g.id) + '">' + ICON.share + "Share</button>" +
-      (canSave() ? '<button type="button" class="link" data-edit="' + esc(g.id) + '">Edit</button><button type="button" class="link" data-del="' + esc(g.id) + '">Delete</button>' : "") + "</div>";
-    return '<div class="game-block">' + gameCardHTML(g) + actions + "</div>";
-  }).join("") : '<p class="muted">No games to show for this filter.</p>';
+  $("#gameList").innerHTML = list.length ? list.map((g) => gameCardHTML(g,
+    '<button type="button" class="gc-act" data-share-game="' + esc(g.id) + '">' + ICON.share + "Share</button>" +
+    (canSave() ? '<button type="button" class="gc-act" data-edit="' + esc(g.id) + '">' + ICON.edit + 'Edit</button><button type="button" class="gc-act gc-del" data-del="' + esc(g.id) + '">' + ICON.trash + "Delete</button>" : "")
+  )).join("") : '<p class="muted">No games to show for this filter.</p>';
   if (state.highlightId) {
     const el = document.getElementById("game-" + state.highlightId);
     if (el) el.scrollIntoView({ block: "center", behavior: reduceMotion() ? "auto" : "smooth" });
@@ -4050,7 +4135,7 @@ function rollCardHTML(e) {
 function buildDiscover() {
   if ($("#rollColours").children.length) return;
   $("#rollColours").innerHTML = "WUBRGC".split("").map((c) =>
-    '<button type="button" class="ctog ' + c.toLowerCase() + '" data-roll-colour="' + c + '" aria-pressed="false" aria-label="' + (c === "C" ? "Colourless" : COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + '">' + c + "</button>").join("");
+    '<button type="button" class="ctog ' + c.toLowerCase() + '" data-roll-colour="' + c + '" aria-pressed="false" aria-label="' + (c === "C" ? "Colourless" : COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + '">' + pipIcon(c) + "</button>").join("");
   const styles = Object.keys(THEMES).filter((t) => !isVibe(t)).sort((a, b) => THEMES[a].localeCompare(THEMES[b]));
   const vibes = Object.keys(THEMES).filter(isVibe);
   $("#rollTheme").innerHTML = '<option value="">Any theme</option>' +
@@ -4132,7 +4217,7 @@ function renderQuiz() {
   } else if (q.step === 2) {
     head = "Which colours call to you?"; hint = "Pick as many as you like and your commander will stick to them. Pick none for a surprise."; multi = true;
     opts = WUBRG.split("").map((c) => '<button type="button" class="qopt" data-quiz-pick="colour:' + c + '" aria-pressed="' + (q.colours.indexOf(c) >= 0) + '">' +
-      '<span class="em" aria-hidden="true"><i class="pip pip-' + c.toLowerCase() + '">' + c + "</i></span><span>" + esc(COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + "</span></button>").join("");
+      '<span class="em" aria-hidden="true">' + pipIcon(c) + "</span><span>" + esc(COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + "</span></button>").join("");
   } else if (q.step === 3) {
     head = "Choose a vibe"; hint = "The flavour you’d love to see on the table.";
     opts = QUIZ_VIBES.map((o) => quizOptHTML(o, q.vibe === o.id, "vibe")).join("");
@@ -5191,7 +5276,7 @@ function bindEvents() {
     if (img && img.tagName === "IMG" && img.dataset && img.dataset.photo) {
       // Drive's thumbnail link sometimes refuses; try its other image address once, then give up quietly.
       if (!img.dataset.retried) { img.dataset.retried = "1"; img.src = "https://lh3.googleusercontent.com/d/" + encodeURIComponent(img.dataset.photo) + "=w1200"; }
-      else { const a = img.closest(".mc-photo, .photo-preview"); if (a) a.hidden = true; }
+      else { const a = img.closest(".gc-photo, .photo-preview"); if (a) a.hidden = true; }
     } else if (img && img.tagName === "IMG" && img.dataset && img.dataset.art) {
       delete artCache[img.dataset.art];
       dropArt(img.dataset.art);
