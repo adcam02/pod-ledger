@@ -22,7 +22,7 @@
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute("content", t === "dark" ? "#07060E" : "#F4F1FF"); });
   }
   if (navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) document.documentElement.classList.add("standalone");
-  if (localStorage.getItem("podLedger.dyslexia") === "1") document.documentElement.classList.add("dyslexia");
+  localStorage.removeItem("podLedger.dyslexia"); // an earlier version remembered the dyslexia font; every visit now starts without it
 } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,10 +188,10 @@ figure { margin: 0; }
   -webkit-backdrop-filter: saturate(1.2) blur(10px); backdrop-filter: saturate(1.2) blur(10px);
   border-bottom: 1px solid var(--line);
 }
-/* On phones that let the page run behind the clock and the Dynamic Island (Safari on iOS 26, or opened from the home
-   screen), this strip covers that area. It stays clear, so the page shows right to the top, until the tab bar sticks
-   under the clock; then it takes the tab bar's frosted glass, so the header reaches the top of the phone. Where the
-   page can't go behind the clock, the strip has no height. */
+/* Opened from a home-screen icon on an iPhone, the page runs behind the clock and the Dynamic Island, and this strip
+   covers that area. It stays clear, so the page shows right to the top, until the tab bar sticks under the clock; then
+   it takes the tab bar's frosted glass, so the header reaches the top of the phone. In Safari, which keeps that area
+   for itself, the strip has no height. */
 .status-shade { position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: env(safe-area-inset-top, 0px); pointer-events: none; }
 .tabbar-stuck .status-shade {
   background: color-mix(in oklab, var(--bg) 62%, transparent); /* the tab bar's glass */
@@ -961,7 +961,7 @@ select.in.first-pick { max-width: 20rem; }
 .fs-text { display: grid; line-height: 1.3; }
 .fs-note { color: var(--muted); font-weight: 500; font-size: 13px; }
 
-/* ---------- Dyslexia-friendly font (the switch at the bottom of the page, remembered per device) ---------- */
+/* ---------- Dyslexia-friendly font (the switch at the bottom of the page; only for this visit) ---------- */
 @font-face { font-family: "OpenDyslexic"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.3.0/files/opendyslexic-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "OpenDyslexic"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.3.0/files/opendyslexic-latin-700-normal.woff2") format("woff2"); }
 :root.dyslexia { --font-ui: "OpenDyslexic", Verdana, sans-serif; --font-display: var(--font-ui); --font-flavour: var(--font-ui); }
@@ -990,8 +990,9 @@ select.in.first-pick { max-width: 20rem; }
 }
 :root[data-look] .masthead, :root[data-look] main, :root[data-look] .filterbar, :root[data-look] .page-foot, :root[data-look] .banner { position: relative; z-index: 1; }
 .hero-cap { display: none; }
-/* Where iOS keeps its own plain strip behind the clock (Safari before iOS 26), fading the top of the page into the
-   theme colour lets the two meet without a line. Where the page runs behind the clock, the fade is left off. */
+/* In Safari, iOS keeps its own plain strip behind the clock (web pages can't draw there, even on iOS 26), so fading
+   the top of the page into the theme colour lets the two meet without a line. From the home screen, where the page
+   runs behind the clock, the fade is left off. */
 :root[data-look] body::before {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 1; pointer-events: none;
   background: linear-gradient(var(--bg), transparent);
@@ -1561,7 +1562,7 @@ select.in.first-pick { max-width: 20rem; }
 </main>
 
 <footer class="wrap page-foot">
-  <button type="button" class="font-switch" id="dyslexiaBtn" role="switch" aria-checked="false"><span class="fs-track" aria-hidden="true"><span class="fs-thumb"></span></span><span class="fs-text">Dyslexia-friendly font <span class="fs-note">This device only</span></span></button>
+  <button type="button" class="font-switch" id="dyslexiaBtn" role="switch" aria-checked="false"><span class="fs-track" aria-hidden="true"><span class="fs-thumb"></span></span><span class="fs-text">Dyslexia-friendly font <span class="fs-note">Just for you, this visit</span></span></button>
   <p>Commander names and colours come from Scryfall, current to mid-August 2026. Anything newer can be typed in by hand.</p>
 </footer>
 <dialog class="confirm-dialog" id="shareDialog" aria-labelledby="shareTitle">
@@ -4361,15 +4362,13 @@ function cycleTheme() {
 }
 
 /* ---------- dyslexia-friendly font ---------- */
-const DYSLEXIA_KEY = "podLedger.dyslexia";
 function paintDyslexiaBtn() {
   $("#dyslexiaBtn").setAttribute("aria-checked", String(document.documentElement.classList.contains("dyslexia")));
 }
 function toggleDyslexia() {
   const on = document.documentElement.classList.toggle("dyslexia");
-  try { if (on) localStorage.setItem(DYSLEXIA_KEY, "1"); else localStorage.removeItem(DYSLEXIA_KEY); } catch (e) { /* storage blocked */ }
   paintDyslexiaBtn();
-  toast(on ? "Dyslexia-friendly font is on for this device" : "Dyslexia-friendly font is off");
+  toast(on ? "Dyslexia-friendly font on" : "Dyslexia-friendly font off");
   // Charts lay out their labels, so draw them again once the font has loaded.
   const redraw = () => render();
   if (on && document.fonts && document.fonts.load) document.fonts.load('400 16px "OpenDyslexic"').then(redraw, redraw);
