@@ -102,8 +102,9 @@ web apps. Use a personal Google account instead.
   for each player based on the themes and colours of the decks they've played, and a shortlist of saved commanders.
   The quiz answers and the shortlist live in each person's browser, so nothing about them is stored in the sheet.
   The themes come from `tools/commanders.py`, which reads each card's rules text, so they're a good guess, not gospel.
-- **Splash message:** the little yellow box by the pod name shows a random message on each visit, sometimes about the
-  pod itself (the leader, a win streak, a commander suggestion). Tap it for another.
+- **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
+  each visit. Tap it for another. On 25 September 2026 Adam cut the list to the 68 lines he liked; the lines about the
+  pod itself (the leader, win streaks, commander suggestions, holidays) and the jokes aimed at a named player went too.
 - **Player pages:** tap any player's name for their record, commanders, head-to-heads, form over time, knockouts and
   commanders to try.
 - **Knockouts:** the log form has an optional Knockouts section: each player's finishing place, who knocked them out and
@@ -112,9 +113,18 @@ web apps. Use a personal Google account instead.
   winner's place is written as 1 only when someone else in the game has a place.
 - **Standings:** Won, Win %, **Outlasted** (opponents who went out before you; a win outlasts the whole table, and games
   without knockouts only count the winner's) and **vs average** (wins compared with an average player's at the same table
-  sizes, which used to be called "vs par"). The page explains all four under the table.
+  sizes, which used to be called "vs par"). "How the standings work" under the table opens to explain all four.
 - **Stats** also shows how people go out, kills, finishing places, the deadliest decks, and deck speed (fastest wins,
-  shortest and longest games, from finishing turns and game lengths).
+  shortest and longest games, from finishing turns and game lengths). A row of buttons at the top jumps to each part.
+  **Win rate over time** draws each regular's win rate after every game, starting from their third game, against a
+  dashed line for an average player at the pod's table sizes. **Colours by month** shows the share of decks with each
+  colour in each month (a three-colour deck counts for all three).
+- **Games search:** the Games tab has a search box (players, commanders, partners, key cards, how it was won and the
+  notes; every word must match) and a row of buttons for how the game ended, each with a count of what the search
+  leaves. Both work together with the Player filter.
+- **Opening straight away:** each browser keeps a copy of the last games it loaded (`podLedger.cache.v1` in local
+  storage) and shows them at once while the sheet wakes up, with "Checking for new games…" under the pod name until
+  the latest arrive. Nothing new is stored: it's the same data the page already shows.
 - **Scryfall:** every commander row and deck name links to the card on Scryfall (partner decks show both cards).
 - **Light and dark:** the button next to "Log a game" cycles Auto, Light and Dark, remembered per browser.
 - **Dyslexia-friendly font:** the switch at the bottom of the page changes the whole app to OpenDyslexic, with no italics
