@@ -2239,7 +2239,7 @@ const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).j
    the third is the accent (the glow under the current tab, pressed buttons, focus rings). Null for four or five colours,
    colourless or an unknown commander. */
 function cmdFills(ci) {
-  const order = ci && ci !== "C" ? (ci.length === 1 ? ci : CI_ORDER[ci] || "") : "";
+  const order = ci && ci !== "C" ? (ci.length === 1 ? (MANA_TONES[ci] ? ci : "") : CI_ORDER[ci] || "") : "";
   if (!order) return null;
   const t = order.split("").map((c) => MANA_TONES[c]);
   const mono = t.length === 1;
@@ -2417,8 +2417,8 @@ function rungHTML(p, i) {
   "</li>";
 }
 
-/* A card's two colours: its winner's blend (see cmdFills), the usual pink and violet for four or five colours, and
-   greys for colourless or a draw. */
+/* A card's two colours: its winner's blend (see cmdFills), the usual pink and violet for four or five colours or a
+   commander we don't know, and greys for colourless or a draw. */
 function cardColours(ci) {
   const f = cmdFills(ci);
   if (f) return [f.a, f.b];
