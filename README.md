@@ -52,7 +52,8 @@ Script editor, save, then choose **Deploy → Manage deployments → pencil icon
 Deploy**. Keep using that one deployment: both the page's `API_URL` and the old link point at it.
 
 If a new server version misbehaves, go back to **Manage deployments**, edit the deployment and pick the
-previous version number. Version 13 is the last one that served the whole app from the old link.
+previous version number. The site needs version 14 or later, since older versions can't answer its requests;
+version 13 is the last one that served the whole app from the old link.
 
 ## Setting it up from scratch
 
