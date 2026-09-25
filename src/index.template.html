@@ -117,12 +117,12 @@ figure { margin: 0; }
 .icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- Masthead ---------- */
-.masthead { padding-block: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; }
+.masthead { padding-block: max(14px, calc(env(safe-area-inset-top, 0px) + 8px)) 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; }
 .masthead-main { min-width: 0; }
 .eyebrow, .lab, .k-label {
   font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
 }
-.podname-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.podname-row { display: flex; align-items: center; gap: 6px; }
 .podname-row h1 { font-size: clamp(30px, 5.4vw, 42px); font-weight: 700; letter-spacing: -.01em; }
 .masthead-sub { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
 .rename { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
@@ -947,17 +947,17 @@ select.in.first-pick { max-width: 20rem; }
 
 .page-foot { padding-block: 0 44px; color: var(--muted); font-size: 13px; }
 .page-foot p { margin: 0; }
+/* A small, quiet switch: it only matters to the few people who want it. */
 .font-switch {
-  appearance: none; display: inline-flex; align-items: center; gap: 12px; min-height: 48px; margin: 0 0 12px; padding: 6px 16px 6px 10px; cursor: pointer;
-  border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 600; text-align: left;
+  appearance: none; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; margin: 0 0 6px; padding: 0; cursor: pointer;
+  border: 0; background: none; color: var(--muted); font-size: 13px; font-weight: 600;
 }
-.font-switch:hover { border-color: var(--ink-2); }
-.fs-track { position: relative; width: 38px; height: 22px; flex: none; border-radius: 999px; background: var(--line-strong); transition: background-color .15s; }
-.fs-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s; }
+.font-switch:hover { color: var(--ink-2); }
+.fs-track { position: relative; width: 28px; height: 16px; flex: none; border-radius: 999px; background: var(--line-strong); transition: background-color .15s; }
+.fs-thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .3); transition: transform .15s; }
+.font-switch[aria-checked="true"] { color: var(--ink-2); }
 .font-switch[aria-checked="true"] .fs-track { background: var(--mythic); }
-.font-switch[aria-checked="true"] .fs-thumb { transform: translateX(16px); }
-.fs-text { display: grid; line-height: 1.3; }
-.fs-note { color: var(--muted); font-weight: 500; font-size: 13px; }
+.font-switch[aria-checked="true"] .fs-thumb { transform: translateX(12px); }
 
 /* ---------- Dyslexia-friendly font (the switch at the bottom of the page; only for this visit) ---------- */
 @font-face { font-family: "OpenDyslexic"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.3.0/files/opendyslexic-latin-400-normal.woff2") format("woff2"); }
@@ -1138,7 +1138,6 @@ select.in.first-pick { max-width: 20rem; }
 
 <header class="masthead wrap">
   <div class="masthead-main">
-    <div class="eyebrow">Commander league</div>
     <div class="podname-row" id="podNameRow">
       <h1 id="podName">The Pod</h1>
       <button type="button" class="icon-btn" id="renameBtn" aria-label="Rename your pod" hidden>
@@ -1568,7 +1567,7 @@ select.in.first-pick { max-width: 20rem; }
 </main>
 
 <footer class="wrap page-foot">
-  <button type="button" class="font-switch" id="dyslexiaBtn" role="switch" aria-checked="false"><span class="fs-track" aria-hidden="true"><span class="fs-thumb"></span></span><span class="fs-text">Dyslexia-friendly font <span class="fs-note">Just for you, this visit</span></span></button>
+  <button type="button" class="font-switch" id="dyslexiaBtn" role="switch" aria-checked="false"><span class="fs-track" aria-hidden="true"><span class="fs-thumb"></span></span>Dyslexia-friendly font</button>
   <p>Commander names and colours come from Scryfall, current to mid-August 2026. Anything newer can be typed in by hand.</p>
 </footer>
 <dialog class="confirm-dialog" id="shareDialog" aria-labelledby="shareTitle">
@@ -2211,8 +2210,9 @@ function renderMasthead() {
   if (state.phase === "loading") sub = "Loading games…";
   else if (state.phase === "offline") sub = "Not connected to the spreadsheet";
   else if (!state.games.length) sub = "No games logged yet";
-  else sub = plural(state.games.length, "game") + " logged · last played " + fmtDate(state.games[0].playedOn);
+  else sub = "";
   $("#mastheadSub").textContent = sub;
+  $("#mastheadSub").hidden = !sub;
   $("#renameBtn").hidden = !canSave() || !$("#renameForm").hidden;
   renderHero();
 }
@@ -2239,7 +2239,7 @@ const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).j
    the third is the accent (the glow under the current tab, pressed buttons, focus rings). Null for four or five colours,
    colourless or an unknown commander. */
 function cmdFills(ci) {
-  const order = ci && ci !== "C" ? (ci.length === 1 ? ci : CI_ORDER[ci] || "") : "";
+  const order = ci && ci !== "C" ? (ci.length === 1 ? (MANA_TONES[ci] ? ci : "") : CI_ORDER[ci] || "") : "";
   if (!order) return null;
   const t = order.split("").map((c) => MANA_TONES[c]);
   const mono = t.length === 1;
@@ -2417,13 +2417,14 @@ function rungHTML(p, i) {
   "</li>";
 }
 
-/* A card's two colours: its winner's blend (see cmdFills), the usual pink and violet for four or five colours, and
-   greys for colourless or a draw. */
+/* A card's two colours: its winner's blend (see cmdFills), gold for four or five colours (like a multicolour card's
+   frame), greys for colourless or a draw, and the usual pink and violet for a commander we don't know. */
 function cardColours(ci) {
   const f = cmdFills(ci);
   if (f) return [f.a, f.b];
   if (!ci) return ["#8B93A1", "#5B6472"];
   if (ci === "C") return ["#B8BEC6", "#6A7480"];
+  if (/^[WUBRG]{4,5}$/.test(ci)) return ["#F2D27C", "#B5852A"];
   return ["#FF4FD8", "#8B5CF6"];
 }
 function gameCardHTML(g, footHTML) {
