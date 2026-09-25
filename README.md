@@ -130,7 +130,8 @@ web apps. Use a personal Google account instead.
   accent. Four or five colours, and colourless, keep the usual pink, violet and blue. White shows as gold and black as a
   smoky violet so both stand out. In the local preview, the "Preview leader" picker in the corner tries other
   commanders.
-- **Game cards:** the winner's commander art across the top with how they won, the date, the winner and their deck;
+- **Game cards:** the winner's commander art across the top (never cropped: at its own shape on phones, and on wider
+  screens the whole illustration on a blurred copy of itself) with how they won, the date, the winner and their deck;
   then turn, length and player count; the finishing order; the story, card of the game, notes and board photo; and
   Share, Edit and Delete at the bottom (Games tab only). Each card's edges take its winner's colours, or gold for a
   four- or five-colour deck, like a multicolour card's frame.
