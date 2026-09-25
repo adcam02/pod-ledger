@@ -93,6 +93,9 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Gradients start at the outer edge, not inside the border; otherwise the far end of the gradient peeks through a
+   (transparent) border as a sliver of the wrong colour. !important because every "background:" shorthand resets it. */
+*, *::before, *::after { background-origin: border-box !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -357,12 +360,28 @@ select.in { max-width: none; }
 }
 .gcard::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; z-index: 3; background: linear-gradient(90deg, var(--ga), var(--gb)); }
 .gc-hero {
-  position: relative; aspect-ratio: 16 / 9; min-height: 180px; color: #fff;
+  position: relative; overflow: hidden; aspect-ratio: 16 / 9; min-height: 180px; color: #fff;
   background: radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--ga) 70%, #0B0916), transparent 70%),
     radial-gradient(120% 90% at 100% 100%, color-mix(in oklab, var(--gb) 70%, #0B0916), transparent 70%), #0B0916;
 }
 @container (min-width: 520px) { .gc-hero { aspect-ratio: 2.7 / 1; } }
 .gc-pic { position: absolute; inset: 0; display: flex; gap: 2px; }
+.gc-pic img, .gc-blur { pointer-events: none; } /* the credit is on show, so no hover tooltip */
+/* One commander: the whole illustration. Scryfall's art crops are 626 x 457. */
+.gc-hero.gc-solo { aspect-ratio: 626 / 457; }
+.gc-blur { display: none; }
+@container (min-width: 520px) {
+  .gc-hero.gc-solo { aspect-ratio: 2.55 / 1; }
+  .gc-solo .gc-blur {
+    display: block; position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px);
+    object-fit: cover; filter: blur(24px) saturate(1.25) brightness(.62);
+  }
+  .gc-solo .pic-half { display: flex; justify-content: flex-end; }
+  .gc-solo .pic-half img {
+    width: auto; height: 100%; aspect-ratio: 626 / 457; object-fit: cover;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%); mask-image: linear-gradient(90deg, transparent, #000 22%);
+  }
+}
 /* A shade at the top and bottom so the words stay readable over any art. */
 .gc-hero::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -2460,8 +2479,14 @@ function gameCardHTML(g, footHTML) {
     (g.notes ? '<p class="gc-notes">' + esc(g.notes) + "</p>" : "") +
     (g.photo ? '<a class="gc-photo" href="' + esc(photoLink(g.photo)) + '" target="_blank" rel="noopener noreferrer" title="Open the full photo">' +
       '<img src="' + esc(photoView(g.photo)) + '" alt="Photo of the final board" loading="lazy" referrerpolicy="no-referrer" data-photo="' + esc(g.photo) + '"></a>' : "");
+  const solo = !!(w && w.commander && !w.partner);
+  let blur = "";
+  if (solo) {
+    const k = norm(w.commander), e = artState(w.commander), ok = typeof e === "object";
+    blur = '<img class="gc-blur" alt="" data-art="' + esc(k) + '" referrerpolicy="no-referrer"' + (ok ? ' src="' + esc(e.url) + '"' : " hidden") + ">";
+  }
   return '<article class="gcard' + (state.highlightId === g.id ? " is-new" : "") + '" id="game-' + esc(g.id) + '" style="--ga:' + cc[0] + ";--gb:" + cc[1] + '">' +
-    '<header class="gc-hero">' + (w ? artPicHTML([w.commander, w.partner], "gc-pic") : "") +
+    '<header class="gc-hero' + (solo ? " gc-solo" : "") + '">' + blur + (w ? artPicHTML([w.commander, w.partner], "gc-pic") : "") +
       '<div class="gc-top"><span class="gc-chip gc-how">' + esc(how) + '</span><time class="gc-chip" datetime="' + esc(g.playedOn) + '">' + esc(fmtDate(g.playedOn, false)) + "</time></div>" +
       '<div class="gc-title">' + (w
         ? '<span class="gc-eyebrow">Winner</span><h3 class="gc-winner">' + who(w) + '</h3><p class="gc-deck">' + esc(deckLabel(w)) + pipsHTML(ci, "sm") + "</p>"
@@ -3971,12 +3996,34 @@ const SPLASHES = [
   "Shuffle better!", "Fetch, crack, shuffle… still shuffling", "Swords to Plowshares: enjoy the life",
   "Beast Within: here, have a 3/3", "Chaos Warp: pray for a land", "Salt is a condiment, not a strategy",
   "Your commander’s back in the zone. Again.",
+  // Picked from what other Commander tables say (Adam's list, September 2026)
+  "In response… I am sad.", "Sadness on the stack. Sadness resolves.", "Pact the turn-one Sol Ring. Send a message.",
+  "He played a Sol Ring. Time to scoop.", "2, 4, 6, 8, 9. Tooth and Nail, entwined!", "I’m not the threat… oh look, I won.",
+  "Seven mana, nothing to do!", "All aboard the value train!", "He’s ramping, get him!", "You put WHAT in your deck? Who hurt you?",
+  "Omnath is just the Kool-Aid Man.", "Careful, this deck has a Blood Moon in it", "We’re all playing for second place.",
+  "Threat order: combo, then blue, then you.", "So you have chosen death…", "Always the kingmaker, never the king.",
+  "Let’s play pauper while you finish your turn.", "You can’t kill me! I die in response!", "Which card? Dis card.",
+  "Ob Nixilis? You mean Bob Noxious.", "Relentless Dead? That’s Fred.", "Just an honest man playing honest cards.",
+  "Temple of the False God: the fifth land.", "Turn one Bojuka Bog. That is all.", "I would have won next turn.",
+  "The non-blue player: “I’ll allow it.”", "Turn one: Sol Ring, Signet, pass.", "Searched your library? I cast Archive Trap.",
+  "Blocking your turn-two threat with a land.", "Not picking on you. We know that deck.", "Easy there, Rampy McRamperson.",
+  "Elesh Norn resolves. Collective groan.", "“I got this.” (Concedes next turn.)", "Threat assessment: what have we learned?",
+  "I block your sorcery. First strike!", "That’s my turn… wait, I forgot my triggers.", "SOOOUL RIIING!",
+  "In response, I tap three and lose.", "“I play a land.” “Countered.”", "Pass priority. Use YOUR counterspell!",
+  "Permanent exile. (Rips card in half.)", "IT’S MY TURN! (It isn’t.)", "Kodama’s Reach? HE’S COMBOING!",
+  "Rolls the die. One to six, it’s you.", "Ooh, a counter! A piece of candy!", "Kill him, he has all his colours!",
+  "You get a land! And you get a land!", "I scoop in response. (Doesn’t scoop.)", "GO GO ELVISH MYSTIC!", "POP THE DISK!",
+  "Solemn Simulacrum is Sad Robot.", "Sakura-Tribe Elder? That’s Steve.", "Stormtide Leviathan is Big Fish.", "IT’S A FROG!",
+  "Najeela attacks. BUT WAIT, THERE’S MORE!", "HE’S RUMPING!", "Float one. …Nah, that’s it.", "Fifteen squirrels just blocked Emrakul.",
+  "It’s casual… until Sol Ring into Signet.",
 ];
 /* A few jokes aimed at a random regular. */
 const SPLASH_AT = [
   "{name}, do you pay the one?", "{name} is definitely the threat", "{name} swears it’s a 7", "{name} has two blue open…",
   "{name} is still thinking about their turn…", "{name} has nothing, apparently", "Don’t trust {name}’s politics",
   "{name}, it’s your turn!", "{name}, did you pay for Rhystic Study?", "{name} says it’s casual",
+  "{name} is ramping. Get them!", "{name} would have won next turn", "Kill {name}, they have all their colours!",
+  "{name} is not the threat. (They are.)", "{name}, which card? Dis card.",
 ];
 let splashText = "";
 let splashLive = false;
