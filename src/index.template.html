@@ -15,7 +15,15 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>try { var t = localStorage.getItem("podLedger.theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<script>try {
+  var t = localStorage.getItem("podLedger.theme");
+  if (t === "light" || t === "dark") {
+    document.documentElement.setAttribute("data-theme", t);
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute("content", t === "dark" ? "#07060E" : "#F4F1FF"); });
+  }
+  if (navigator.standalone) document.documentElement.classList.add("standalone");
+  if (localStorage.getItem("podLedger.dyslexia") === "1") document.documentElement.classList.add("dyslexia");
+} catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@1,400&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Eczar:wght@500;600;700&family=Pixelify+Sans:wght@500&family=Space+Grotesk:wght@600;700&display=swap">
@@ -110,8 +118,8 @@ figure { margin: 0; }
 .sr { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .muted { color: var(--muted); }
 
-.wrap { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 16px; }
-@media (min-width: 720px) { .wrap { padding-inline: 28px; } }
+.wrap { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 720px) { .wrap { padding-inline: max(28px, env(safe-area-inset-left, 0px)) max(28px, env(safe-area-inset-right, 0px)); } }
 
 .icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -180,8 +188,14 @@ figure { margin: 0; }
   -webkit-backdrop-filter: saturate(1.2) blur(10px); backdrop-filter: saturate(1.2) blur(10px);
   border-bottom: 1px solid var(--line);
 }
-/* Opened from a home-screen icon, the page runs under the status bar: keep that strip covered when the tab bar sticks. */
-.tabbar::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: env(safe-area-inset-top, 0px); background: inherit; }
+/* Opened from a home-screen icon, the page runs up behind the clock and the Dynamic Island. This strip keeps the
+   (always white) clock readable: a soft shadow over the page at the top, then frosted once the page scrolls under it.
+   In a browser tab the strip has no height. */
+.status-shade {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: env(safe-area-inset-top, 0px); pointer-events: none;
+  background: linear-gradient(rgba(7, 6, 14, .42), rgba(7, 6, 14, 0));
+}
+.is-scrolled .status-shade { background: var(--status-shade, rgba(28, 21, 69, .86)); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .tabbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; }
 .tabs { display: flex; gap: clamp(14px, 3.2vw, 28px); min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -632,8 +646,7 @@ select.in { max-width: none; }
 .tp-players { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .tp-players li { padding: 6px 11px; border-radius: 6px; background: var(--surface-2); font-weight: 600; }
 .tp-players li.is-host { box-shadow: inset 0 0 0 2px var(--mythic); }
-.tp-reasons { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--ink-2); font-size: 14.5px; }
-.tp-strength { margin: 0; font-size: 13.5px; color: var(--muted); }
+.tp-house { margin: 10px 0 0; }
 .tp-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 
 /* ---------- Player pages ---------- */
@@ -932,6 +945,31 @@ select.in.first-pick { max-width: 20rem; }
 .cd-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 
 .page-foot { padding-block: 0 44px; color: var(--muted); font-size: 13px; }
+.page-foot p { margin: 0; }
+.font-switch {
+  appearance: none; display: inline-flex; align-items: center; gap: 12px; min-height: 48px; margin: 0 0 12px; padding: 6px 16px 6px 10px; cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 600; text-align: left;
+}
+.font-switch:hover { border-color: var(--ink-2); }
+.fs-track { position: relative; width: 38px; height: 22px; flex: none; border-radius: 999px; background: var(--line-strong); transition: background-color .15s; }
+.fs-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s; }
+.font-switch[aria-checked="true"] .fs-track { background: var(--mythic); }
+.font-switch[aria-checked="true"] .fs-thumb { transform: translateX(16px); }
+.fs-text { display: grid; line-height: 1.3; }
+.fs-note { color: var(--muted); font-weight: 500; font-size: 13px; }
+
+/* ---------- Dyslexia-friendly font (the switch at the bottom of the page, remembered per device) ---------- */
+@font-face { font-family: "OpenDyslexic"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.3.0/files/opendyslexic-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "OpenDyslexic"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic@5.3.0/files/opendyslexic-latin-700-normal.woff2") format("woff2"); }
+:root.dyslexia { --font-ui: "OpenDyslexic", Verdana, sans-serif; --font-display: var(--font-ui); --font-flavour: var(--font-ui); }
+/* One steady font everywhere, with no italics or all-capitals and a little more room between words and lines. */
+:root.dyslexia body, :root.dyslexia body * { font-family: var(--font-ui) !important; font-style: normal !important; text-transform: none !important; letter-spacing: normal !important; }
+:root.dyslexia body { word-spacing: .06em; line-height: 1.6; }
+/* The wider letters don't fit a joined row of buttons on a phone, so the row wraps into separate pills. */
+:root.dyslexia .seg { flex-wrap: wrap; gap: 6px; max-width: 100%; overflow: visible; border: 0; border-radius: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root.dyslexia .seg button { border: 1px solid var(--line-strong); border-radius: 999px; background-color: var(--surface); }
+:root.dyslexia[data-look="arcade"] .seg button { border-color: var(--glass-line); background-color: var(--glass); }
+:root.dyslexia[data-look="arcade"] .seg button[aria-pressed="true"] { background: var(--grad-sm); border-color: transparent; color: #fff; }
 .toast {
   position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 50; transform: translateX(-50%);
   display: flex; align-items: center; gap: 14px; max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 8px;
@@ -949,6 +987,14 @@ select.in.first-pick { max-width: 20rem; }
 }
 :root[data-look] .masthead, :root[data-look] main, :root[data-look] .filterbar, :root[data-look] .page-foot, :root[data-look] .banner { position: relative; z-index: 1; }
 .hero-cap { display: none; }
+/* In a Safari tab, iOS paints the strip behind the clock in the theme colour. Fading the top of the page into that
+   colour lets the two meet without a line. From the home screen the page runs behind the clock instead. */
+:root[data-look] body::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 1; pointer-events: none;
+  background: linear-gradient(var(--bg), transparent);
+}
+@media (display-mode: standalone) { :root[data-look] body::before { display: none; } }
+:root.standalone body::before { display: none; }
 
 :root[data-look="arcade"] {
   --bg: #F4F1FF; --surface: #FFFFFF; --surface-2: #F3EFFF; --ink: #1C1545; --ink-2: #3D3570; --muted: #6E6699;
@@ -968,6 +1014,7 @@ select.in.first-pick { max-width: 20rem; }
     --bg: #07060E; --surface: #13111F; --surface-2: #1B1830; --ink: #F3F1FF; --ink-2: #CAC5F1; --muted: #8F89C4;
     --line: #27234A; --line-strong: #3B3571; --mythic: #FF4FD8; --mythic-ink: #1B0318; --mythic-soft: #3B1238; --focus: #8FD8FF;
     --hero-opacity: .3; --glass: rgba(24, 21, 44, .55); --glass-line: rgba(255, 255, 255, .10); --glass-hi: rgba(255, 255, 255, .06);
+    --status-shade: rgba(7, 6, 14, .8);
     --grad-text: linear-gradient(90deg, #FF6ADF, #A78BFA 55%, #4FD8FF);
     --shadow: 0 10px 40px -12px rgba(0, 0, 0, .7);
     --look-bg: radial-gradient(40% 45% at 8% 8%, rgba(255, 79, 216, .42), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(64, 200, 255, .36), transparent 70%),
@@ -980,6 +1027,7 @@ select.in.first-pick { max-width: 20rem; }
   --bg: #07060E; --surface: #13111F; --surface-2: #1B1830; --ink: #F3F1FF; --ink-2: #CAC5F1; --muted: #8F89C4;
   --line: #27234A; --line-strong: #3B3571; --mythic: #FF4FD8; --mythic-ink: #1B0318; --mythic-soft: #3B1238; --focus: #8FD8FF;
   --hero-opacity: .3; --glass: rgba(24, 21, 44, .55); --glass-line: rgba(255, 255, 255, .10); --glass-hi: rgba(255, 255, 255, .06);
+  --status-shade: rgba(7, 6, 14, .8);
   --grad-text: linear-gradient(90deg, #FF6ADF, #A78BFA 55%, #4FD8FF);
   --shadow: 0 10px 40px -12px rgba(0, 0, 0, .7);
   --look-bg: radial-gradient(40% 45% at 8% 8%, rgba(255, 79, 216, .42), transparent 70%), radial-gradient(38% 42% at 92% 12%, rgba(64, 200, 255, .36), transparent 70%),
@@ -1075,6 +1123,7 @@ select.in.first-pick { max-width: 20rem; }
 </style>
 </head>
 <body>
+<div class="status-shade" aria-hidden="true"></div>
 <div class="hero" id="hero" aria-hidden="true"></div>
 
 <header class="masthead wrap">
@@ -1331,10 +1380,9 @@ select.in.first-pick { max-width: 20rem; }
         <div class="tp-block">
           <div class="tp-label"><h3>Priorities</h3></div>
           <div class="tp-prio">
-            <button type="button" class="prio" data-tp-prio="fresh" aria-pressed="true"><span class="box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><b>Mix it up</b><span class="d">Seat people who haven't played each other in the longest</span></button>
-            <button type="button" class="prio" data-tp-prio="grudge" aria-pressed="true"><span class="box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><b>Settle scores</b><span class="d">Give players a rematch against whoever keeps beating them</span></button>
-            <button type="button" class="prio" data-tp-prio="balance" aria-pressed="true"><span class="box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><b>Even tables</b><span class="d">Spread the strongest players so every group is a fair fight</span></button>
+            <button type="button" class="prio" data-tp-prio="fresh" aria-pressed="true"><span class="box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><b>Mix it up</b><span class="d">Split up whoever has shared the most tables lately, going by your logged games</span></button>
           </div>
+          <p class="hint tp-house" id="tpHouse"></p>
         </div>
         <button type="button" class="btn btn-mythic btn-lg" id="tpMake">Make groups</button>
       </section>
@@ -1509,7 +1557,10 @@ select.in.first-pick { max-width: 20rem; }
   </section>
 </main>
 
-<footer class="wrap page-foot">Commander names and colours come from Scryfall, current to mid-August 2026. Anything newer can be typed in by hand.</footer>
+<footer class="wrap page-foot">
+  <button type="button" class="font-switch" id="dyslexiaBtn" role="switch" aria-checked="false"><span class="fs-track" aria-hidden="true"><span class="fs-thumb"></span></span><span class="fs-text">Dyslexia-friendly font <span class="fs-note">This device only</span></span></button>
+  <p>Commander names and colours come from Scryfall, current to mid-August 2026. Anything newer can be typed in by hand.</p>
+</footer>
 <dialog class="confirm-dialog" id="shareDialog" aria-labelledby="shareTitle">
   <div class="cd-body">
     <h2 id="shareTitle">Copy this into the group chat</h2>
@@ -3044,10 +3095,12 @@ function renderCards(games) {
 /* ---------- group generator: split a big night into pods ---------- */
 const TP_KEY = "podLedger.tables.v1";
 const TP_MAX = 20;
+/* House rule, at Adam's request: he always plays with Grady or Ben, and in a group of 4 when the groups aren't the same size. */
+const TP_HOUSE = { player: "Adam", with: ["Grady", "Ben"], size: 4 };
 const tp = loadTp();
 let tpDraw = null;
 function loadTp() {
-  const base = { count: 8, slots: [], hosts: [], tables: 0, prio: { fresh: true, grudge: true, balance: true } };
+  const base = { count: 8, slots: [], hosts: [], tables: 0, prio: { fresh: true } };
   try {
     const d = JSON.parse(localStorage.getItem(TP_KEY) || "null");
     if (!d || typeof d !== "object") return base;
@@ -3060,7 +3113,7 @@ function loadTp() {
       count: Number.isInteger(d.count) && d.count >= 3 && d.count <= TP_MAX ? d.count : Math.min(TP_MAX, Math.max(3, slots.length || 8)),
       slots: slots, hosts: names(d.hosts, TP_MAX),
       tables: Number.isInteger(d.tables) && d.tables > 0 ? d.tables : 0,
-      prio: { fresh: pr.fresh !== false, grudge: pr.grudge !== false, balance: pr.balance !== false },
+      prio: { fresh: pr.fresh !== false },
     };
   } catch (e) { return base; }
 }
@@ -3104,53 +3157,44 @@ function tpSizes(n, k) {
   return Array.from({ length: k }, (_, i) => base + (i < extra ? 1 : 0));
 }
 
-/* What the pod's history says about any two players. */
+/* How much any two players have shared a table in the logged games: every game together counts, recent ones most
+   (a game four weeks ago counts half as much as one last night). */
 function tpContext() {
-  const last = new Map(), beat = new Map();
+  const together = new Map();
   const pk = (a, b) => (a < b ? a + "|" + b : b + "|" + a);
+  const now = Date.now();
   state.games.forEach((g) => {
+    const d = parseISO(g.playedOn);
+    const w = Math.pow(0.5, (d ? Math.max(0, (now - d.getTime()) / 864e5) : 365) / 28);
     const ks = g.seats.map((s) => norm(s.player));
     for (let i = 0; i < ks.length; i++) for (let j = i + 1; j < ks.length; j++) {
-      const k = pk(ks[i], ks[j]), prev = last.get(k);
-      if (prev === undefined || (g.playedOn || "") > prev) last.set(k, g.playedOn || "");
+      const k = pk(ks[i], ks[j]);
+      together.set(k, (together.get(k) || 0) + w);
     }
-    const w = g.winner != null ? ks[g.winner] : null;
-    if (w) ks.forEach((o) => { if (o !== w) beat.set(w + ">" + o, (beat.get(w + ">" + o) || 0) + 1); });
   });
-  // Win rate pulled towards an even share, so one lucky night doesn't make someone a giant.
-  const strength = new Map(computeStats(state.games).players.map((p) => [p.key, (p.wins + 1) / (p.played + 4)]));
-  const now = Date.now();
-  const lastOf = (a, b) => { const v = last.get(pk(norm(a), norm(b))); return v === undefined ? null : v; };
-  const days = (a, b) => {
-    const l = lastOf(a, b);
-    if (l === null) return null;
-    const d = parseISO(l);
-    return d ? Math.max(0, Math.round((now - d.getTime()) / 864e5)) : 365;
-  };
-  const lead = (a, b) => ({ a: beat.get(norm(a) + ">" + norm(b)) || 0, b: beat.get(norm(b) + ">" + norm(a)) || 0 });
   return {
-    w: { fresh: tp.prio.fresh ? 1 : 0, grudge: tp.prio.grudge ? 1 : 0, balance: tp.prio.balance ? 1 : 0 },
-    history: state.games.length > 0,
-    lastOf: lastOf, days: days, lead: lead,
-    fresh: (a, b) => { const d = days(a, b); return d === null ? 1 : Math.min(1, d / 42); },
-    grudge: (a, b) => { const l = lead(a, b); return Math.min(1, Math.abs(l.a - l.b) / 3); },
-    strength: (a) => (strength.has(norm(a)) ? strength.get(norm(a)) : 0.25),
+    mix: !!tp.prio.fresh,
+    games: state.games.length,
+    together: (a, b) => together.get(pk(norm(a), norm(b))) || 0,
   };
 }
-function tpScore(tables, ctx) {
-  let fresh = 0, grudge = 0, pairs = 0;
-  const means = tables.map((t) => {
-    for (let i = 0; i < t.length; i++) for (let j = i + 1; j < t.length; j++) {
-      pairs++;
-      fresh += ctx.fresh(t[i], t[j]);
-      grudge += ctx.grudge(t[i], t[j]);
-    }
-    return t.reduce((sum, p) => sum + ctx.strength(p), 0) / t.length;
-  });
-  const spread = means.length > 1 ? Math.max(...means) - Math.min(...means) : 0;
-  return ctx.w.fresh * (pairs ? fresh / pairs : 0) + ctx.w.grudge * (pairs ? grudge / pairs : 0) + ctx.w.balance * (1 - Math.min(1, spread / 0.25));
+/* How much time the people inside one split's groups have already spent at a table together. */
+function tpTogether(tables, ctx) {
+  let sum = 0;
+  tables.forEach((t) => { for (let i = 0; i < t.length; i++) for (let j = i + 1; j < t.length; j++) sum += ctx.together(t[i], t[j]); });
+  return sum;
 }
-/* Shuffle thousands of ways, score each, then pick randomly among the best so no two draws are the same. */
+/* The house rule for tonight's line-up, or null when it doesn't apply. With uneven groups (sizes differ by one at most)
+   the house player goes in the group closest to TP_HOUSE.size, which is a group of 4 whenever there is one. */
+function tpHouse(players, sizes) {
+  const me = players.find((p) => norm(p) === norm(TP_HOUSE.player));
+  if (!me || sizes.length < 2) return null;
+  const size = sizes.reduce((best, x) => (Math.abs(x - TP_HOUSE.size) < Math.abs(best - TP_HOUSE.size) ? x : best), sizes[0]);
+  return { player: me, size: size, with: TP_HOUSE.with.filter((x) => hasName(players, x)) };
+}
+/* Shuffle thousands of ways and keep the splits that follow the rules. With Mix it up ticked, score them on how little
+   time their groups have spent together and pick randomly among the best, so no two draws are the same; unticked, any
+   split that follows the rules can come up. */
 function tpMakeDraw() {
   const players = tpPlayers();
   const n = players.length;
@@ -3159,12 +3203,22 @@ function tpMakeDraw() {
   const ctx = tpContext();
   const hosts = tp.hosts.filter((h) => hasName(players, h));
   const hostKeys = new Set(hosts.map(norm));
-  const fits = (tables) => {
-    if (!hostKeys.size) return true;
-    const counts = tables.map((t) => t.filter((p) => hostKeys.has(norm(p))).length);
-    return hostKeys.size >= k ? counts.every((c) => c >= 1) : counts.every((c) => c <= 1);
+  const house = tpHouse(players, sizes);
+  // The house rule outranks spreading the hosts; a draw only breaks a rule when every possible split would.
+  const broken = (tables) => {
+    let b = 0;
+    if (house) {
+      const mine = tables.find((tb) => hasName(tb, house.player));
+      if (mine.length !== house.size || (house.with.length && !house.with.some((x) => hasName(mine, x)))) b += 2;
+    }
+    if (hostKeys.size) {
+      const counts = tables.map((t) => t.filter((p) => hostKeys.has(norm(p))).length);
+      if (!(hostKeys.size >= k ? counts.every((c) => c >= 1) : counts.every((c) => c <= 1))) b += 1;
+    }
+    return b;
   };
-  const seen = new Set(), cands = [];
+  const seen = new Set();
+  let cands = [];
   const tries = Math.min(6000, 500 * n);
   for (let t = 0; t < tries; t++) {
     const pool = players.slice();
@@ -3174,9 +3228,14 @@ function tpMakeDraw() {
     const key = tables.map((tb) => tb.map(norm).sort().join(",")).sort().join("/");
     if (seen.has(key)) continue;
     seen.add(key);
-    if (fits(tables)) cands.push({ tables: tables, score: tpScore(tables, ctx) });
+    cands.push({ tables: tables, broken: broken(tables), together: ctx.mix ? tpTogether(tables, ctx) : 0 });
   }
   if (!cands.length) return null;
+  const least = Math.min(...cands.map((c) => c.broken));
+  cands = cands.filter((c) => c.broken === least);
+  // Mixing is scored against the other possible splits: 1 for the least time already spent together, 0 for the most.
+  const lo = Math.min(...cands.map((c) => c.together)), hi = Math.max(...cands.map((c) => c.together));
+  cands.forEach((c) => { c.score = hi > lo ? (hi - c.together) / (hi - lo) : 1; });
   cands.sort((a, b) => b.score - a.score);
   const top = cands.slice(0, 30);
   const weights = top.map((c) => Math.exp((c.score - top[0].score) / 0.05));
@@ -3185,37 +3244,15 @@ function tpMakeDraw() {
   const tables = pick.tables.map((tb) => {
     const host = hosts.find((h) => hasName(tb, h)) || "";
     const players2 = host ? [tb.find((x) => norm(x) === norm(host))].concat(tb.filter((x) => norm(x) !== norm(host))) : tb.slice();
-    return {
-      players: players2,
-      host: host ? players2[0] : "",
-      reasons: ctx.history ? tpReasons(tb, ctx) : [],
-      strength: tb.reduce((sum, x) => sum + ctx.strength(x), 0) / tb.length,
-    };
+    return { players: players2, host: host ? players2[0] : "" };
   });
   tables.sort((a, b) => b.players.length - a.players.length);
-  return { tables: tables, history: ctx.history, balance: !!ctx.w.balance && k > 1, hostsWanted: hosts.length > 0 };
+  return {
+    tables: tables, games: ctx.games, mixed: ctx.mix && ctx.games > 0 && k > 1, hostsWanted: hosts.length > 0, houseBroken: least >= 2,
+  };
 }
-function tpReasons(tb, ctx) {
-  const out = [];
-  let never = null, oldest = null, grudge = null;
-  for (let i = 0; i < tb.length; i++) for (let j = i + 1; j < tb.length; j++) {
-    const a = tb[i], b = tb[j], d = ctx.days(a, b);
-    if (d === null) {
-      const regulars = !isGuestName(a) && !isGuestName(b);
-      if (!never || (regulars && !never.regulars)) never = { a: a, b: b, regulars: regulars };
-    } else if (!oldest || d > oldest.d) oldest = { a: a, b: b, d: d };
-    const l = ctx.lead(a, b), diff = Math.abs(l.a - l.b);
-    if (diff >= 2 && (!grudge || diff > grudge.diff)) {
-      grudge = l.a > l.b ? { top: a, under: b, w: l.a, l: l.b, diff: diff } : { top: b, under: a, w: l.b, l: l.a, diff: diff };
-    }
-  }
-  if (ctx.w.fresh) {
-    if (never && never.regulars) out.push(never.a + " and " + never.b + " haven't played each other yet");
-    else if (oldest && oldest.d >= 14) out.push(oldest.a + " and " + oldest.b + " haven't played each other since " + fmtDate(ctx.lastOf(oldest.a, oldest.b), false));
-    else if (never) out.push(never.a + " and " + never.b + " haven't played each other yet");
-  }
-  if (ctx.w.grudge && grudge) out.push(grudge.under + " gets a rematch with " + grudge.top + ", who leads " + grudge.w + "–" + grudge.l);
-  return out;
+function tpHouseNote() {
+  return "House rule: " + TP_HOUSE.player + " always plays with " + TP_HOUSE.with.join(" or ") + ", and in a group of " + TP_HOUSE.size + " when the groups aren’t the same size.";
 }
 
 function tpChip(name, on, attr, cls) {
@@ -3229,8 +3266,6 @@ function tableCardHTML(t, i, source) {
     '<div class="tc-head"><h4>Group ' + (i + 1) + "</h4>" + hostLine + "</div>" +
     '<ul class="tp-players">' + t.players.map((p) =>
       '<li class="' + (t.host && norm(p) === norm(t.host) ? "is-host" : "") + '">' + esc(p) + (isGuestName(p) ? '<span class="guest-tag">guest</span>' : "") + "</li>").join("") + "</ul>" +
-    (t.reasons && t.reasons.length ? '<ul class="tp-reasons">' + t.reasons.map((r) => "<li>" + esc(r) + "</li>").join("") + "</ul>" : "") +
-    (source === "draw" && tpDraw && tpDraw.balance ? '<p class="tp-strength">Average win rate ' + pct(t.strength) + "</p>" : "") +
     (canSave() ? '<button type="button" class="link small" data-tp-log="' + source + ":" + i + '">Log this group’s game</button>' : "") +
   "</article>";
 }
@@ -3257,11 +3292,13 @@ function renderTonight() {
 function renderDraw() {
   const box = $("#tpResult");
   if (!tpDraw) {
-    box.innerHTML = '<div class="tp-empty"><h3>The draw</h3><p>Pick how many people, choose who they are, and press <b>Make groups</b>. Every shuffle is random, nudged towards the priorities you’ve ticked.</p></div>';
+    box.innerHTML = '<div class="tp-empty"><h3>The draw</h3><p>Pick how many people, choose who they are, and press <b>Make groups</b>. Every shuffle is random, nudged by Mix it up when it’s ticked.</p></div>';
     return;
   }
   box.innerHTML = '<div class="tp-head"><h3>The draw</h3>' +
-    (tpDraw.history ? "" : '<p class="count">No games logged yet, so this is a straight random draw.</p>') + "</div>" +
+    (tpDraw.games ? "" : '<p class="count">No games logged yet, so this is a straight random draw.</p>') +
+    (tpDraw.mixed ? '<p class="count">Mixed using your ' + plural(tpDraw.games, "logged game") + ", so whoever has shared the most tables lately is split up.</p>" : "") +
+    (tpDraw.houseBroken ? '<p class="count">' + esc(TP_HOUSE.player) + " couldn’t be seated by the house rule this time.</p>" : "") + "</div>" +
     '<div class="table-cards">' + tpDraw.tables.map((t, i) => tableCardHTML(t, i, "draw")).join("") + "</div>" +
     '<div class="tp-actions"><button type="button" class="btn btn-quiet" id="tpShuffle">Shuffle again</button>' + shareBtnHTML("draw") +
       (canSave() ? '<button type="button" class="btn btn-mythic" id="tpSave">Save for everyone</button>' : "") + "</div>" +
@@ -3295,6 +3332,7 @@ function renderTables() {
   $("#tpLess").disabled = k <= 1;
   $("#tpMore").disabled = k >= Math.floor(total / 3);
   for (const b of $$("[data-tp-prio]")) b.setAttribute("aria-pressed", String(!!tp.prio[b.dataset.tpPrio]));
+  $("#tpHouse").textContent = tpHouseNote();
   const ready = assigned === total;
   $("#tpMake").disabled = !ready;
   let need = $("#tpNeed");
@@ -4302,14 +4340,37 @@ function paintThemeBtn() {
   b.setAttribute("aria-label", "Colours: " + ui.label + (t === "auto" ? " (follows your device)" : "") + ". Change");
   b.title = t === "auto" ? "Colours follow your device. Tap for light." : t === "light" ? "Light colours. Tap for dark." : "Dark colours. Tap to follow your device.";
 }
+/* The colour iOS paints behind the clock in a Safari tab: the chosen theme's background, or the device's when on Auto. */
+const THEME_BG = { light: "#F4F1FF", dark: "#07060E" };
+function syncThemeColor() {
+  const t = currentTheme();
+  for (const m of $$('meta[name="theme-color"]')) m.setAttribute("content", THEME_BG[t !== "auto" ? t : /dark/.test(m.getAttribute("media") || "") ? "dark" : "light"]);
+}
 function cycleTheme() {
   const next = { auto: "light", light: "dark", dark: "auto" }[currentTheme()];
   if (next === "auto") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.setAttribute("data-theme", next);
+  syncThemeColor();
   try { if (next === "auto") localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, next); } catch (e) { /* storage blocked */ }
   paintThemeBtn();
   render(); // charts pick up the new colours
   toast(next === "auto" ? "Colours now follow your device" : next === "light" ? "Light mode" : "Dark mode");
+}
+
+/* ---------- dyslexia-friendly font ---------- */
+const DYSLEXIA_KEY = "podLedger.dyslexia";
+function paintDyslexiaBtn() {
+  $("#dyslexiaBtn").setAttribute("aria-checked", String(document.documentElement.classList.contains("dyslexia")));
+}
+function toggleDyslexia() {
+  const on = document.documentElement.classList.toggle("dyslexia");
+  try { if (on) localStorage.setItem(DYSLEXIA_KEY, "1"); else localStorage.removeItem(DYSLEXIA_KEY); } catch (e) { /* storage blocked */ }
+  paintDyslexiaBtn();
+  toast(on ? "Dyslexia-friendly font is on for this device" : "Dyslexia-friendly font is off");
+  // Charts lay out their labels, so draw them again once the font has loaded.
+  const redraw = () => render();
+  if (on && document.fonts && document.fonts.load) document.fonts.load('400 16px "OpenDyslexic"').then(redraw, redraw);
+  else redraw();
 }
 
 /* ---------- navigation ---------- */
@@ -4954,6 +5015,7 @@ function bindEvents() {
     if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
     if (t.closest("#themeBtn")) { cycleTheme(); return; }
+    if (t.closest("#dyslexiaBtn")) { toggleDyslexia(); return; }
     const more = t.closest("#plMorePicks");
     if (more) { disc.picksFor = more.dataset.name || ""; picksNonce = 0; saveDisc(); go("discover"); $("#h-picks").scrollIntoView({ block: "start" }); return; }
     if (t.closest("#plBack")) { go(state.playerFrom || "standings"); return; }
@@ -5113,6 +5175,9 @@ function bindEvents() {
   document.addEventListener("focusout", (e) => { if (e.target.closest && e.target.closest("[data-tip]")) hideTip(); });
   document.addEventListener("pointerdown", (e) => { if (!(e.target.closest && e.target.closest("[data-tip], #raceHit"))) hideTip(); });
   window.addEventListener("scroll", hideTip, { passive: true });
+  const markScrolled = () => document.documentElement.classList.toggle("is-scrolled", window.scrollY > 4);
+  window.addEventListener("scroll", markScrolled, { passive: true });
+  markScrolled();
   document.addEventListener("error", (e) => {
     const img = e.target;
     if (img && img.tagName === "IMG" && img.dataset && img.dataset.photo) {
@@ -5370,6 +5435,7 @@ function bindEvents() {
 function start() {
   bindEvents();
   paintThemeBtn();
+  paintDyslexiaBtn();
   nextSplash();
   const fromHash = location.hash.replace(/^#/, "");
   if (VIEWS.indexOf(fromHash) >= 0 && fromHash !== "log") state.view = fromHash;
