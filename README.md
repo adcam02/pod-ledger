@@ -87,9 +87,13 @@ web apps. Use a personal Google account instead.
   column, stored by name) and each player's mulligans (0 to 4+). Mulligans live in 8 columns after the knockout columns
   ("P1 mulligans" to "P8 mulligans"), added on the first save after the feature arrived; blank means not logged, 0 means
   they kept their first seven. Stats has "Going first" and "Mulligans" panels, and player pages an "Openings" panel.
-- **Group generator:** pick how many people, choose each person (or a guest), and it splits them into groups,
-  favouring people who haven't played each other lately, rematches and evenly matched groups. "Save for
-  everyone" stores the draw in the Settings tab (row 3) so the whole pod sees tonight's groups.
+- **Group generator:** pick how many people, choose each person (or a guest), and it splits them into groups. With
+  **Mix it up** ticked it splits up whoever has shared the most tables in the logged games (every game together counts,
+  recent ones most: a game four weeks ago counts half); unticked, it's a plain random draw. The rematch and even-tables
+  options were removed on 25 September 2026 at Adam's request. A house rule (`TP_HOUSE` in the page's script) keeps
+  Adam with Grady or Ben and puts him in a group of 4 when the groups aren't the same size; the page shows it under
+  Mix it up. It outranks spreading the hosts.
+  "Save for everyone" stores the draw in the Settings tab (row 3) so the whole pod sees tonight's groups.
 - **Sharing groups:** after a draw (and under saved groups) there's a "Share to the group chat" button. On a phone it
   opens the share sheet, so Messenger is one tap away; on a computer it copies the groups to paste instead. The message
   ends with the ledger link, which is the `LEDGER_LINK` constant near the top of the page's script. The build also
@@ -113,6 +117,10 @@ web apps. Use a personal Google account instead.
   shortest and longest games, from finishing turns and game lengths).
 - **Scryfall:** every commander row and deck name links to the card on Scryfall (partner decks show both cards).
 - **Light and dark:** the button next to "Log a game" cycles Auto, Light and Dark, remembered per browser.
+- **Dyslexia-friendly font:** the switch at the bottom of the page changes the whole app to OpenDyslexic, with no italics
+  or all-capitals and a little more room between words and lines. The font comes from jsDelivr's copy of Fontsource
+  (`@fontsource/opendyslexic@5.3.0`) and only downloads once someone turns the switch on. It's remembered per device
+  (`podLedger.dyslexia` in the browser's storage), so it only changes things for the person who turned it on.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the main commander
   of whoever leads the standings for the chosen period.
@@ -121,7 +129,10 @@ web apps. Use a personal Google account instead.
   cards and open full size in Drive. Replace or Remove works when editing a game; a removed photo stays in the Drive
   folder, so delete it there if it should go for good.
 - **Home screen:** the site has an icon and a web app manifest, so "Add to Home Screen" (iPhone, from Safari's Share
-  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars.
+  menu) or "Add to Home screen" (Android) gives it an app icon that opens without the browser bars. Opened that way on
+  an iPhone, the page runs up behind the clock and the Dynamic Island, with a soft shade that frosts over once you
+  scroll. In a Safari tab, iOS keeps a plain strip behind the clock; the page sets its colour to match the theme
+  picked with the Auto/Light/Dark button, and fades its top edge into it.
 - **Deleting a game** asks first in a pop-up that names the game. After deleting there's an Undo, and the row stays in
   the sheet marked `deleted`.
 - **Weekly backups:** every Monday between midnight and 1am, a time-driven trigger runs `weeklyBackup`, which copies the
