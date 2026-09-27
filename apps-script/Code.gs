@@ -68,6 +68,9 @@ const PHOTO = MUL0 + MAX_SEATS;          // 0-based column of "Board photo"
 const WIDTH = PHOTO + 1;
 const PHOTO_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const PHOTO_MAX_BYTES = 6 * 1024 * 1024;
+/* The page names each new game itself ("c" then letters and digits), so a save sent twice (a retry after the connection
+   dropped, or a game sent later from a phone that had no signal) updates one row instead of adding a second. */
+const CLIENT_ID = /^c[a-z0-9]{8,24}$/;
 
 /* The old link: a page pointing people to the new address. */
 function doGet() {
@@ -134,7 +137,7 @@ function saveGame(input) {
     } else {
       row = Math.max(sh.getLastRow(), 1) + 1;
       if (row > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 50);
-      game.id = newId_();
+      game.id = CLIENT_ID.test(game.id) ? game.id : newId_();
     }
     // No photo field keeps the one already there; null takes it off the game (the file stays in Drive).
     game.photo = uploaded || (photo === null ? '' : kept);
