@@ -20,7 +20,8 @@ ROOT = pathlib.Path(__file__).resolve().parent
 MARKER = '/*__COMMANDERS__*/""'
 APP_SCRIPT_START = "<script>\n(function () {"
 LINK = re.compile(r'const LEDGER_LINK = "(https://[^"]+)";')
-# Preview only: stand in a commander as the leader, to try the banner art and colours it brings.
+# Preview only: stand in a commander as the leader (to try the banner art and colours it brings), and pretend the
+# phone has no signal (to try games waiting to send).
 SAMPLES = [
     ("", "The real leader"),
     ("Brudiclad, Telchor Engineer", "Brudiclad (blue, red)"),
@@ -36,14 +37,24 @@ SAMPLES = [
     ("Atraxa, Praetors' Voice", "Atraxa (four colours: usual look)"),
 ]
 SAMPLE_PICKER = (
-    '<div id="samplePicker" style="position:fixed;left:12px;bottom:12px;z-index:9999;padding:8px 10px;border-radius:12px;'
-    'background:rgba(20,16,40,.92);color:#fff;font:600 13px system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.4)">'
-    '<label>Preview leader <select id="sampleSel" style="font:inherit;margin-left:6px">'
+    '<style>#samplePicker{position:fixed;left:12px;bottom:12px;z-index:9999;max-width:calc(100vw - 24px);padding:8px 10px;border-radius:12px;'
+    'background:rgba(20,16,40,.92);color:#fff;font:600 13px system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.4)}'
+    '#samplePicker summary{cursor:pointer}#samplePicker label{display:block;margin-top:6px}#samplePicker select{font:inherit;margin-left:6px}'
+    '@media (max-width:640px){#samplePicker{bottom:calc(96px + env(safe-area-inset-bottom,0px))}}</style>\n'
+    '<details id="samplePicker" open><summary>Preview</summary>'
+    '<label>Leader <select id="sampleSel">'
     + "".join('<option value="%s">%s</option>' % (v.replace('"', "&quot;"), label) for v, label in SAMPLES)
-    + '</select></label></div>\n'
-    '<script>document.getElementById("sampleSel").addEventListener("change", function (e) {'
-    ' window.__previewCommander = e.target.value;'
-    ' var p = document.getElementById("period"); p.dispatchEvent(new Event("change", { bubbles: true })); });</script>\n'
+    + '</select></label>'
+    '<label>Signal <select id="sigSel"><option value="">On</option><option value="off">Off (pretend no signal)</option></select></label>'
+    '</details>\n'
+    '<script>(function () {'
+    ' if (/[?&]nopicker\\b/.test(location.search)) { document.getElementById("samplePicker").remove(); return; }'
+    ' document.getElementById("sampleSel").addEventListener("change", function (e) {'
+    '  window.__previewCommander = e.target.value;'
+    '  var cur = document.querySelector(\'.tab[aria-current="page"]\'); if (cur) cur.click(); });'
+    ' document.getElementById("sigSel").addEventListener("change", function (e) {'
+    '  window.__noSignal = e.target.value === "off"; if (!window.__noSignal) window.dispatchEvent(new Event("online")); });'
+    '})();</script>\n'
 )
 
 
@@ -95,6 +106,13 @@ def main():
     print(f"docs/index.html         {size / 1024:.0f} KB, plus {len(list((ROOT / 'src' / 'site').iterdir()))} icon and manifest files")
     print(f"apps-script/Index.html  the moved page, pointing at {links[0]}")
     print("dev/preview.html        built, and dev/moved.html to look at the moved page")
+    # Every release should say what changed: the page shows this list once on each phone whenever it changes.
+    news = re.search(r'<ul class="news-list">(.*?)</ul>', template, re.S)
+    if not news:
+        raise SystemExit("Could not find the What's new list (ul.news-list) in the template.")
+    print("What's new (shown once on each phone whenever this list changes, so update it with each release):")
+    for item in re.findall(r"<li>(.*?)</li>", news.group(1), re.S):
+        print("  - " + re.sub(r"<[^>]+>", "", item).strip())
 
 
 if __name__ == "__main__":
