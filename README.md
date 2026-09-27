@@ -28,7 +28,7 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 | `src/index.template.html` | Source for the page; edit this, then run the build |
 | `src/commanders.tsv` | Every card that can be a commander, with colour identity, theme tags and a complexity score (from `~/mtg-lab/data/cards.sqlite`, Scryfall data of 16 Aug 2026) |
 | `src/moved.html` | Source for the "We've moved" page the old link shows |
-| `src/site/` | The app icons and web app manifest, copied into `docs/` by the build |
+| `src/site/` | The app icons, the web app manifest and `sw.js` (keeps the page on phones so it opens without signal), copied into `docs/` by the build |
 | `src/icons/` | Versions of the icon for iPhones and Android; `sh tools/icons.sh` turns them into the PNGs in `src/site/` |
 | `docs/` | The published site (built; don't edit by hand) |
 | `apps-script/Code.gs` | The server: reads and writes the "Games" tab, stores photos, answers the page's requests |
@@ -40,7 +40,9 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 
 ## Updating the page
 
-1. Edit `src/index.template.html` and run `python3 build.py`.
+1. Edit `src/index.template.html`, including the **What's new** list (`ul.news-list` in the What's new dialog),
+   and run `python3 build.py`, which prints that list at the end. The list shows once on each phone whenever its
+   words change, so every release that people will notice should update it.
 2. On GitHub, open the repository's `docs` folder, choose **Add file → Upload files**, drop in the new
    `docs/index.html` (and any other changed files from `docs/`) and **Commit changes**. The site updates
    within a minute or two.
@@ -53,7 +55,9 @@ Deploy**. Keep using that one deployment: both the page's `API_URL` and the old 
 
 If a new server version misbehaves, go back to **Manage deployments**, edit the deployment and pick the
 previous version number. The site needs version 14 or later, since older versions can't answer its requests;
-version 13 is the last one that served the whole app from the old link.
+version 13 is the last one that served the whole app from the old link. Version 15 keeps the id the page gives a
+new game (`CLIENT_ID` in `Code.gs`), so a game sent twice updates one row; with version 14 the page still works but
+a resent game could be logged twice.
 
 ## Setting it up from scratch
 
@@ -98,10 +102,14 @@ web apps. Use a personal Google account instead.
   opens the share sheet, so Messenger is one tap away; on a computer it copies the groups to paste instead. The message
   ends with the ledger link, which is the `LEDGER_LINK` constant near the top of the page's script. The build also
   puts that link on the moved page, so change it there if the site ever moves again.
-- **Discover:** a random commander roller (filters for colours, theme and popularity), a five-question quiz, picks
-  for each player based on the themes and colours of the decks they've played, and a shortlist of saved commanders.
-  The quiz answers and the shortlist live in each person's browser, so nothing about them is stored in the sheet.
-  The themes come from `tools/commanders.py`, which reads each card's rules text, so they're a good guess, not gospel.
+- **Sections:** Standings (the player standings, the rivalry of the month, then the Commanders list with its player
+  filter and sort), Games, Stats and the Group generator. On phones they sit in a bar along the bottom (Standings,
+  Games, a big + to log a game, Stats, Generator); wider screens show them as tabs along the top. Everything counts all
+  time: the period picker was taken out on 27 September 2026 at Adam's request, as was the Discover tab (random
+  commander, quiz and shortlist). Old links to `#commanders` or `#discover` open Standings.
+- **Commanders to try:** each player page suggests three commanders from the themes and colours of the decks they've
+  played; "Other picks" shows another three. The themes come from `tools/commanders.py`, which reads each card's rules
+  text, so they're a good guess, not gospel.
 - **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
   each visit. Tap it for another. On 25 September 2026 Adam cut the list to the 68 lines he liked; the lines about the
   pod itself (the leader, win streaks, commander suggestions, holidays) and the jokes aimed at a named player went too.
@@ -119,6 +127,19 @@ web apps. Use a personal Google account instead.
   **Win rate over time** draws each regular's win rate after every game, starting from their third game, against a
   dashed line for an average player at the pod's table sizes. **Colours by month** shows the share of decks with each
   colour in each month (a three-colour deck counts for all three).
+- **Month in review:** the last panel on the Stats page, for the current month so far (and, in a month's first week,
+  the month just finished): games and nights, most wins, deck of the month, fastest win, most knockouts, longest game,
+  colour of the month and decks new to the pod, with a button to share it to the group chat. A menu picks older months.
+- **What's new:** a small list of recent changes opens once on each device, then again whenever the list changes (its
+  version is worked out from its own words, stored per browser as `podLedger.news`). "What's new" in the footer opens it.
+- **No signal:** on the real site a service worker (`sw.js`) keeps the page, fonts, mana symbols and card art on the
+  phone. The page comes from the network when there is a connection and from the saved copy after four seconds or
+  with none. A new game logged with no signal is kept on the phone (`podLedger.outbox.v1`), shown at the top of Games
+  as "waiting to send", and sent by itself when a connection is back. The page names each new game itself, so a game
+  sent twice is saved once (needs server version 15). Opening the site with `?nosw` removes the service worker from
+  that browser.
+- **Player colours:** the eight colours the charts give the regulars stay apart for every pair of players, including
+  for colour-blind eyes, in light and dark (checked with the data-viz palette validator across all pairs).
 - **Games search:** the Games tab has a search box (players, commanders, partners, key cards, how it was won and the
   notes; every word must match) and a row of buttons for how the game ended, each with a count of what the search
   leaves. Both work together with the Player filter.
@@ -126,14 +147,15 @@ web apps. Use a personal Google account instead.
   storage) and shows them at once while the sheet wakes up, with "Checking for new games…" under the pod name until
   the latest arrive. Nothing new is stored: it's the same data the page already shows.
 - **Scryfall:** every commander row and deck name links to the card on Scryfall (partner decks show both cards).
-- **Light and dark:** the button next to "Log a game" cycles Auto, Light and Dark, remembered per browser.
+- **Light and dark:** the button next to "Log a game" (on phones, top right of the header) cycles Auto, Light and
+  Dark, remembered per browser.
 - **Dyslexia-friendly font:** the switch at the bottom of the page changes the whole app to OpenDyslexic, with no italics
   or all-capitals and a little more room between words and lines. The font comes from jsDelivr's copy of Fontsource
   (`@fontsource/opendyslexic@5.3.0`) and only downloads once someone turns the switch on. It isn't remembered: every
   visit starts with the normal font, and the switch only changes the page for the person who pressed it.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the main commander
-  of whoever leads the standings for the chosen period.
+  of whoever leads the standings.
 - **Commander colours:** the gradients, glows and background tint follow the colour identity of the all-time leader's
   main commander (`applyCmdColours`, with the shades in `MANA_TONES` and the printed colour order in `CI_ORDER`). One
   colour blends light to deep, two blend first to second, and with three the first two blend and the third is the
@@ -179,4 +201,8 @@ web apps. Use a personal Google account instead.
   `preview.html?seed` (a dozen games already logged) or `preview.html?offline` (not connected), and `moved.html`
   for the moved page. The preview never talks to the real sheet; photos go to a pretend Drive, so they
   show as missing on the cards.
-- `dev/preview.html`, `dev/moved.html`, `dev/code.js` and the icon files in `dev/` are build output.
+- `phones.html` shows two phone-sized copies of the preview side by side (Standings and Stats), to see the phone
+  layout at any window size (`preview.html?nopicker` hides the Preview panel).
+- The preview's small **Preview** panel also pretends the phone has no signal, for trying games waiting to send. The service worker stays off locally unless the page is opened with `?sw=1`;
+  `?nosw` removes it again.
+- `dev/preview.html`, `dev/moved.html`, `dev/code.js`, `dev/sw.js` and the icon files in `dev/` are build output.
