@@ -271,6 +271,18 @@ check("only pictures are accepted", pr.ok === false && /JPEG, PNG or WebP/.test(
 psheet.getRange(2, WIDTH).setValue("1AbCdEfGhIjKlMnOpQrStUvWxYz0123456");
 check("a photo id typed by hand is read", clone(getLedger()).games[0].photo === "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456");
 
+console.log("games named by the page");
+__mockSheets.reset();
+const cg = { id: "cabc123def456", playedOn: "2026-09-26", seats: [{ player: "Adam" }, { player: "Ben" }], winner: 0, winType: "combat" };
+pr = post({ fn: "saveGame", args: [cg] });
+check("a new game keeps the id the page gave it", pr.ok && pr.result.id === "cabc123def456" && pr.result.ledger.games.length === 1, pr.result && pr.result.id);
+pr = post({ fn: "saveGame", args: [cg] });
+check("sending the same game again doesn't add a second", pr.ok && pr.result.id === "cabc123def456" && pr.result.ledger.games.length === 1, pr.result && pr.result.ledger.games.length);
+pr = post({ fn: "saveGame", args: [Object.assign({}, cg, { id: "not-a-page-id" })] });
+check("any other unknown id gets a fresh one", pr.ok && pr.result.id !== "not-a-page-id" && /^g/.test(pr.result.id) && pr.result.ledger.games.length === 2, pr.result && pr.result.id);
+pr = post({ fn: "saveGame", args: [Object.assign({}, cg, { id: "c1" })] });
+check("a page id has to look like one", pr.ok && /^g/.test(pr.result.id) && pr.result.ledger.games.length === 3, pr.result && pr.result.id);
+
 console.log("many games");
 const before = clone(getLedger()).games.length;
 for (let i = 0; i < 1100; i++) saveGame({ playedOn: "2026-01-01", seats: [{ player: "A" }, { player: "B" }], winner: i % 2, winType: "combo" });
