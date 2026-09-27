@@ -6,6 +6,8 @@
  *   preview.html            empty spreadsheet
  *   preview.html?seed       spreadsheet with a dozen games already logged
  *   preview.html?offline    no spreadsheet at all (the page's not-connected state)
+ *
+ * The preview's Signal switch sets window.__noSignal, which fails every call the way a dropped connection does.
  */
 (function () {
   "use strict";
@@ -21,6 +23,7 @@
         return function () {
           const args = clone(Array.from(arguments));
           setTimeout(() => {
+            if (window.__noSignal) { if (fail) fail(new Error("Failed to fetch")); return; } // the preview's "no signal" switch
             let out;
             try { out = clone(window[name].apply(null, args)); }
             catch (e) { if (fail) fail(new Error(e.message)); return; }
