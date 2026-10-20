@@ -432,6 +432,12 @@ select.in { max-width: none; }
 .gc-act:hover { color: var(--ink); border-color: var(--ink-2); }
 .gc-act .icon { width: 15px; height: 15px; }
 .gc-del:hover { color: var(--bad); border-color: var(--bad); }
+/* Phones: the four actions (Again, Share, Edit, Delete) share one row evenly instead of wrapping. */
+@media (max-width: 480px) {
+  .gc-foot:has(> .gc-act:nth-of-type(4)) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .gc-foot:has(> .gc-act:nth-of-type(4)) .gc-act { justify-content: center; gap: 4px; padding: 0 4px; font-size: 13px; }
+  .gc-foot:has(> .gc-act:nth-of-type(4)) .gc-act .icon { width: 14px; height: 14px; }
+}
 .gcard.is-new { animation: card-flash 1.8s ease-out 1; }
 @keyframes card-flash {
   from { box-shadow: 0 0 0 4px var(--mythic), var(--shadow); }
@@ -936,6 +942,8 @@ select.in.first-pick { max-width: 20rem; }
 .cmdlet-why { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 .cmdlet-meta { margin: 0; font-size: 13px; color: var(--muted); }
 #plTry .cmdlets { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); } /* always three, so let them fill the row */
+.picks-foot { margin: 12px 0 0; }
+.cmdlet-foot .nfm { color: var(--muted); text-decoration-color: color-mix(in oklab, currentColor 35%, transparent); }
 .pick-tag { justify-self: start; padding: 2px 9px; border-radius: 999px; background: var(--mythic-soft); color: var(--ink); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
 .cmdlet-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 2px; }
 .cmdlet-foot .link.small { padding-block: 4px; }
@@ -1799,9 +1807,10 @@ select.in.first-pick { max-width: 20rem; }
     <h2 id="newsTitle">What’s new</h2>
     <ul class="news-list">
       <li><b>A game timer</b> at the top of Log a game: start it when the game begins, stop it at the end and the length fills itself in</li>
+      <li><b>Same table again:</b> after saving a game, or with Again on any game, the next one starts with the same players and decks</li>
       <li><b>The colours change:</b> each day the page takes on a different deck that’s doing well, and on game night it’s the latest winner’s. Tap the line under the pod’s name for another.</li>
-      <li><b>Much smarter commander picks</b> on every player page: matched to what thousands of real decks run, with hidden gems, new colours, new commanders, combos and wildcards, each saying why</li>
-      <li><b>Discover is back</b> (in the bar along the bottom on phones): roll a random commander, take the commander quiz, and tap Save on any commander to keep a shortlist</li>
+      <li><b>Much smarter commander picks</b> on every player page, matched to what thousands of real decks run, each saying why. Tap <b>Not for me</b> to hide one and steer the picks away from it.</li>
+      <li><b>Discover is back</b> (in the bar along the bottom on phones): roll a random commander, take the commander quiz (now on real deck data, with a question on how serious your table is), and tap Save to keep a shortlist</li>
     </ul>
     <div class="cd-actions"><button type="button" class="btn btn-mythic" id="newsDone">Got it</button></div>
   </div>
@@ -1855,6 +1864,7 @@ const COMBO_NAMES = {
 const DRAFT_KEY = "podLedger.draft.v1";
 const MAX_SEATS = 8;
 const ICON = {
+  again: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v3.7h3.7"/></svg>',
   stopwatch: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.8M9.5 3h5M12 3v3M18.2 7.3l1.6-1.6"/></svg>',
   play: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>',
   pause: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="3"/></svg>',
@@ -2957,6 +2967,7 @@ function renderGames(st, games) {
       esc(k === "draw" ? "No winner" : WT_LABEL.get(k)) + ' <span class="n">' + (counts.get(k) || 0) + "</span></button>").join("");
   $("#gamesCount").textContent = list.length === base.length ? plural(base.length, "game") : list.length + " of " + plural(base.length, "game");
   $("#gameList").innerHTML = list.length ? list.map((g) => gameCardHTML(g,
+    (canSave() ? '<button type="button" class="gc-act" data-again="' + esc(g.id) + '" aria-label="Log the same table again">' + ICON.again + "Again</button>" : "") +
     '<button type="button" class="gc-act" data-share-game="' + esc(g.id) + '">' + ICON.share + "Share</button>" +
     (canSave() ? '<button type="button" class="gc-act" data-edit="' + esc(g.id) + '">' + ICON.edit + 'Edit</button><button type="button" class="gc-act gc-del" data-del="' + esc(g.id) + '">' + ICON.trash + "Delete</button>" : "")
   )).join("") : base.length ? '<p class="muted games-none">No games match. <button type="button" class="link" data-games-clear>Show all games</button></p>' : '<p class="muted">No games to show for this filter.</p>';
@@ -4499,6 +4510,7 @@ function whyFor(e, pref, who) {
 function picksFor(name, count, nonce) {
   const taste = tasteOf(norm(name));
   if (!taste.games) return { taste: taste, picks: [] };
+  notForMe(norm(name)).forEach((n) => { const e = CMD_BY_NORM.get(norm(n)); if (e) taste.exclude.add(e.n); });
   const all = suggest(taste, count * 5, hashStr(norm(name) + "|" + todayISO()));
   const pages = Math.max(1, Math.ceil(all.length / count));
   const page = nonce % pages;
@@ -4508,13 +4520,14 @@ function starHTML(name) {
   const on = disc.shortlist.some((x) => norm(x) === norm(name));
   return '<button type="button" class="star" data-star="' + esc(name) + '" aria-pressed="' + on + '">' + ICON.star + "<span>" + (on ? "Saved" : "Save") + "</span></button>";
 }
-function cmdletHTML(e, why, tag, meta) {
+function cmdletHTML(e, why, tag, meta, forPlayer) {
   return '<li class="cmdlet">' + artPicHTML([e.name], "cmdlet-art", true) +
     '<div class="cmdlet-body">' + (tag ? '<span class="pick-tag">' + esc(tag) + "</span>" : "") +
       '<div class="cmdlet-name">' + esc(e.name) + pipsHTML(e.ci, "sm") + "</div>" +
       (why ? '<p class="cmdlet-why">' + esc(why) + "</p>" : "") +
       (meta ? '<p class="cmdlet-meta">' + esc(meta) + "</p>" : "") +
       '<div class="cmdlet-foot">' + starHTML(e.name) +
+        (forPlayer ? '<button type="button" class="link small nfm" data-nfm="' + esc(e.name) + '" data-nfm-for="' + esc(forPlayer) + '">Not for me</button>' : "") +
         '<a class="link small" href="' + esc(edhrecLink(e.name)) + '" target="_blank" rel="noopener">EDHREC</a>' +
         '<a class="link small" href="' + esc(scryfall(e.name)) + '" target="_blank" rel="noopener">Scryfall</a></div>' +
     "</div></li>";
@@ -4523,16 +4536,19 @@ function picksHTML(name, count, nonce) {
   const smart = needPicks();
   if (!smart && pkState === "loading") return '<p class="chart-empty">Finding picks for ' + esc(name) + "…</p>";
   const r = smart ? smartPicks(name) : null;
+  const hidden = notForMe(norm(name)).length;
+  const foot = hidden ? '<p class="picks-foot"><button type="button" class="link small" data-nfm-reset="' + esc(name) + '">Bring back the ' +
+    (hidden === 1 ? "pick" : plural(hidden, "pick")) + " you hid</button></p>" : "";
   if (r && r.picks.length) {
     const pages = Math.max(1, Math.ceil(r.picks.length / count));
     const at = (nonce % pages) * count;
-    return '<ul class="cmdlets">' + r.picks.slice(at, at + count).map((p) => cmdletHTML(p.e, p.why, p.tag, p.meta)).join("") + "</ul>";
+    return '<ul class="cmdlets">' + r.picks.slice(at, at + count).map((p) => cmdletHTML(p.e, p.why, p.tag, p.meta, name)).join("") + "</ul>" + foot;
   }
   // Without the picks file (or for decks it doesn't know), the older picks from themes and colours.
   const old = picksFor(name, count, nonce);
   if (!old.taste.games) return '<p class="chart-empty">' + esc(name) + " hasn’t played a logged game yet. Picks show up here after their first one, and the quiz on Discover works for anyone.</p>";
   if (!old.picks.length) return '<p class="chart-empty">No picks yet. The commanders in ' + esc(name) + "’s games aren’t ones this page knows.</p>";
-  return '<ul class="cmdlets">' + old.picks.map((e) => cmdletHTML(e, whyFor(e, old.taste, name))).join("") + "</ul>";
+  return '<ul class="cmdlets">' + old.picks.map((e) => cmdletHTML(e, whyFor(e, old.taste, name), "", "", name)).join("") + "</ul>" + foot;
 }
 
 /* ---------- picks that know the cards (src/picks.json, made by tools/picks.py) ---------- */
@@ -4593,6 +4609,7 @@ function preparePicks(d) {
   const df = new Array(d.tags.length).fill(0);
   d.th.forEach((list) => list.forEach((x) => { df[x[0]]++; }));
   const idf = df.map((x) => Math.log((d.count + 1) / (x + 1)) + 0.2);
+  d.idf = idf;
   d.tv = d.th.map((list) => {
     const v = new Map();
     let s = 0;
@@ -4602,6 +4619,7 @@ function preparePicks(d) {
     return v;
   });
   d.tagOf = new Map(d.tags.map((t, i) => [t, i]));
+  d.tribal = new Set(d.tribal || []);
   return d;
 }
 function themeCos(T, v) {
@@ -4690,16 +4708,52 @@ function podCommanders(key) {
 const near = (a, b) => shortName(CMD[a].name) === shortName(CMD[b].name) ||
   PK.nb[a].some((x) => x[0] === b && x[1] >= 72) || PK.nb[b].some((x) => x[0] === a && x[1] >= 72);
 
+/* "Not for me": commanders someone has turned down in a player's picks, kept on this phone only, by player. They're left
+   out from then on, and the picks lean away from commanders that play like them and from their themes. */
+const NFM_KEY = "podLedger.notForMe.v1";
+function notForMe(key) {
+  try {
+    const all = JSON.parse(localStorage.getItem(NFM_KEY) || "{}") || {};
+    return Array.isArray(all[key]) ? all[key].filter((n) => typeof n === "string").slice(0, 200) : [];
+  } catch (e) { return []; }
+}
+function setNotForMe(key, names) {
+  try {
+    const all = JSON.parse(localStorage.getItem(NFM_KEY) || "{}") || {};
+    if (names.length) all[key] = names.slice(0, 200); else delete all[key];
+    localStorage.setItem(NFM_KEY, JSON.stringify(all));
+  } catch (e) { /* storage blocked: it lasts until the page closes */ }
+}
+function dismissPick(player, name) {
+  const key = norm(player), before = notForMe(key);
+  if (before.some((n) => norm(n) === norm(name))) return;
+  setNotForMe(key, before.concat([name]));
+  render();
+  toast("Hidden from " + player + "’s picks", "Undo", () => { setNotForMe(key, before); render(); });
+}
+
 /* The picks for one player: a list in the order they're shown, each with the kind of pick it is ("close" plays like
    one of their decks, "gem" few people play it, "colours" the same idea in colours they haven't used, "fresh" new in
    print, "combo" a known combo for someone who wins that way, "rising" fast-growing on EDHREC, "wild" a step sideways). */
 const smartCache = new Map();
 function smartPicks(name) {
   const key = norm(name);
-  const sig = key + "|" + state.games.length + "|" + todayISO();
+  const hidden = notForMe(key).map((n) => CMD_BY_NORM.get(norm(n))).filter(Boolean).map((e) => e.rank);
+  const sig = key + "|" + state.games.length + "|" + todayISO() + "|" + hidden.join(",");
   if (smartCache.has(sig)) return smartCache.get(sig);
   const P = pickProfile(key);
   const out = { P: P, picks: [] };
+  // Turned-down picks pull the taste away from their themes...
+  if (hidden.length) {
+    hidden.forEach((d) => PK.tv[d].forEach((v, t) => { if (P.T.has(t)) P.T.set(t, Math.max(0, P.T.get(t) - 0.35 * v / hidden.length)); }));
+    let n2 = 0;
+    P.T.forEach((v) => { n2 += v * v; });
+    P.T.forEach((v, t) => P.T.set(t, v / (Math.sqrt(n2) || 1)));
+  }
+  // ...and away from commanders that play like them.
+  const unlike = new Map();
+  hidden.forEach((d) => PK.nb[d].forEach((x) => unlike.set(x[0], Math.max(unlike.get(x[0]) || 0, x[1] / 100))));
+  hidden.forEach((d) => P.owned.add(d)); // and they're never shown again
   smartCache.set(sig, out);
   if (!P.decks.length) return out;
   const pod = podCommanders(key);
@@ -4743,7 +4797,8 @@ function smartPicks(name) {
     c.ubFit = P.ubShare >= 0.3 && PK.ub[j] >= 0 ? (P.ub.has(PK.ub[j]) ? 1 : 0.6) : 0;
     c.pod = pod.get(j);
     c.base = 0.42 * Math.min(1, Math.max(c.like, c.hop * 0.9) / 0.9) + 0.26 * c.fit + 0.1 * c.colourFit + 0.08 * c.popFit +
-      0.06 * c.power + 0.05 * c.style + 0.03 * c.ubFit - (c.pod ? 0.05 : 0) - (shorts.has(shortName(e.name)) ? 0.15 : 0) + rand() * 0.04;
+      0.06 * c.power + 0.05 * c.style + 0.03 * c.ubFit - (c.pod ? 0.05 : 0) - (shorts.has(shortName(e.name)) ? 0.15 : 0) -
+      0.3 * (unlike.get(j) || 0) + rand() * 0.04;
     scored.push(c);
   });
   const topThemes = new Set(Array.from(P.T.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map((x) => x[0]));
@@ -4913,27 +4968,27 @@ function nextSplash() {
 /* ---------- Discover: random commanders, the quiz, picks and a shortlist ---------- */
 const DISC_KEY = "podLedger.discover.v1";
 const QUIZ_STYLES = [
-  { id: "army", em: "🐜", label: "A huge army of little creatures", tags: { t: 1, k: 0.6, y: 0.5 }, title: "Swarm Wrangler", blurb: "You like a crowded board and one big swing when nobody’s watching." },
-  { id: "monster", em: "🦖", label: "One enormous monster", tags: { b: 1, v: 0.7, c: 0.5 }, title: "Monster Tamer", blurb: "You’d happily trade twenty small creatures for one terrifying one." },
-  { id: "spells", em: "🪄", label: "Clever spells and combos", tags: { s: 1, r: 0.6, q: 0.5 }, title: "Spell Slinger", blurb: "Your favourite turn is the one where everything chains together." },
-  { id: "control", em: "🙅", label: "Saying no to everything", tags: { n: 1, r: 0.4 }, title: "Professional No-Sayer", blurb: "You enjoy the quiet power of having an answer for everything." },
-  { id: "graveyard", em: "🧟", label: "Bringing things back from the dead", tags: { g: 1, x: 0.6 }, title: "Necromancer", blurb: "For you, the graveyard is just a second hand." },
-  { id: "drain", em: "🩸", label: "Draining the whole table", tags: { p: 1, x: 0.6, l: 0.5 }, title: "Life Leech", blurb: "You like watching every life total tick down at once." },
-  { id: "counters", em: "🌱", label: "Growing things a little every turn", tags: { c: 1, l: 0.3, t: 0.3 }, title: "Gardener", blurb: "Slow and steady growth is your favourite kind of threat." },
-  { id: "engine", em: "⚙️", label: "Artifacts and enchantments", tags: { a: 1, e: 1, v: 0.3 }, title: "Tinkerer", blurb: "You love building a little engine out of permanents." },
-  { id: "lands", em: "🌋", label: "Playing heaps of lands", tags: { d: 1, b: 0.4 }, title: "Landscaper", blurb: "More lands means more of everything, and you know it." },
-  { id: "chaos", em: "🎲", label: "Coin flips and chaos", tags: { z: 1, o: 0.7, q: 0.3 }, title: "Agent of Chaos", blurb: "You’re here for the stories people tell after the game." },
-  { id: "friends", em: "🤝", label: "Making friends and deals", tags: { h: 1, r: 0.3, l: 0.3 }, title: "Group Hugger", blurb: "You play the table as much as the cards." },
+  { id: "army", em: "🐜", label: "A huge army of little creatures", tags: { t: 1, k: 0.6, y: 0.5 }, themes: { "Tokens": 1, "Go Wide": 1, "Anthems": 0.7, "Populate": 0.4, "Weenies": 0.4, "Myriad": 0.3 }, title: "Swarm Wrangler", blurb: "You like a crowded board and one big swing when nobody’s watching." },
+  { id: "monster", em: "🦖", label: "One enormous monster", tags: { b: 1, v: 0.7, c: 0.5 }, themes: { "Stompy": 1, "Power Matters": 0.6, "Big Mana": 0.5, "Ramp": 0.4, "Eldrazi": 0.4, "Voltron": 0.3 }, title: "Monster Tamer", blurb: "You’d happily trade twenty small creatures for one terrifying one." },
+  { id: "spells", em: "🪄", label: "Clever spells and combos", tags: { s: 1, r: 0.6, q: 0.5 }, themes: { "Spellslinger": 1, "Storm": 0.7, "Spell Copy": 0.7, "Combo": 0.5, "Cantrips": 0.4, "Prowess": 0.4 }, title: "Spell Slinger", blurb: "Your favourite turn is the one where everything chains together." },
+  { id: "control", em: "🙅", label: "Saying no to everything", tags: { n: 1, r: 0.4 }, themes: { "Control": 1, "Counterspells": 0.8, "Stax": 0.6, "Prison": 0.5, "Pillow Fort": 0.4, "Tempo": 0.3 }, title: "Professional No-Sayer", blurb: "You enjoy the quiet power of having an answer for everything." },
+  { id: "graveyard", em: "🧟", label: "Bringing things back from the dead", tags: { g: 1, x: 0.6 }, themes: { "Reanimator": 1, "Graveyard": 0.8, "Self-Mill": 0.6, "Dredge": 0.4, "Flashback": 0.4 }, title: "Necromancer", blurb: "For you, the graveyard is just a second hand." },
+  { id: "drain", em: "🩸", label: "Draining the whole table", tags: { p: 1, x: 0.6, l: 0.5 }, themes: { "Aristocrats": 1, "Lifedrain": 0.9, "Group Slug": 0.6, "Sacrifice": 0.5, "Burn": 0.4 }, title: "Life Leech", blurb: "You like watching every life total tick down at once." },
+  { id: "counters", em: "🌱", label: "Growing things a little every turn", tags: { c: 1, l: 0.3, t: 0.3 }, themes: { "+1/+1 Counters": 1, "Counters Matter": 0.6, "Proliferate": 0.6, "Modified Creatures": 0.3 }, title: "Gardener", blurb: "Slow and steady growth is your favourite kind of threat." },
+  { id: "engine", em: "⚙️", label: "Artifacts and enchantments", tags: { a: 1, e: 1, v: 0.3 }, themes: { "Artifacts": 1, "Enchantress": 1, "Auras": 0.4, "Sagas": 0.3, "Equipment": 0.3, "Treasure": 0.3 }, title: "Tinkerer", blurb: "You love building a little engine out of permanents." },
+  { id: "lands", em: "🌋", label: "Playing heaps of lands", tags: { d: 1, b: 0.4 }, themes: { "Lands Matter": 1, "Landfall": 1, "Ramp": 0.6, "Land Animation": 0.3 }, title: "Landscaper", blurb: "More lands means more of everything, and you know it." },
+  { id: "chaos", em: "🎲", label: "Coin flips and chaos", tags: { z: 1, o: 0.7, q: 0.3 }, themes: { "Chaos": 1, "Coin Flip": 1, "Die Roll": 0.8, "Cascade": 0.5, "Polymorph": 0.3, "Discover": 0.3 }, title: "Agent of Chaos", blurb: "You’re here for the stories people tell after the game." },
+  { id: "friends", em: "🤝", label: "Making friends and deals", tags: { h: 1, r: 0.3, l: 0.3 }, themes: { "Group Hug": 1, "Politics": 1, "Monarch": 0.5, "Voting": 0.5, "Forced Combat": 0.3, "Donate": 0.3 }, title: "Group Hugger", blurb: "You play the table as much as the cards." },
 ];
 const QUIZ_VIBES = [
-  { id: "C", em: "🐭", label: "Cute critters", word: "Cuddly" },
-  { id: "S", em: "👻", label: "Spooky", word: "Spooky" },
-  { id: "D", em: "🐉", label: "Dragons and dinosaurs", word: "Scaly" },
-  { id: "W", em: "📚", label: "Wizards", word: "Bookish" },
-  { id: "N", em: "🌿", label: "Nature and elves", word: "Leafy" },
-  { id: "P", em: "🏴‍☠️", label: "Pirates and the sea", word: "Salty" },
-  { id: "K", em: "🛡️", label: "Knights and angels", word: "Noble" },
-  { id: "R", em: "🤖", label: "Robots and gadgets", word: "Clockwork" },
+  { id: "C", em: "🐭", label: "Cute critters", word: "Cuddly", themes: ["Cats", "Squirrels", "Rabbits", "Mice", "Otters", "Frogs", "Bats", "Raccoons", "Foxes", "Dogs", "Birds", "Monkeys", "Turtles"] },
+  { id: "S", em: "👻", label: "Spooky", word: "Spooky", themes: ["Zombies", "Vampires", "Spirits", "Horrors", "Demons", "Skeletons", "Werewolves", "Shades", "Wraiths", "Specters"] },
+  { id: "D", em: "🐉", label: "Dragons and dinosaurs", word: "Scaly", themes: ["Dragons", "Dinosaurs", "Hydras", "Wurms", "Drakes"] },
+  { id: "W", em: "📚", label: "Wizards", word: "Bookish", themes: ["Wizards", "Sphinxes", "Artificers"] },
+  { id: "N", em: "🌿", label: "Nature and elves", word: "Leafy", themes: ["Elves", "Druids", "Treefolk", "Fungi", "Saprolings", "Plants", "Satyrs"] },
+  { id: "P", em: "🏴‍☠️", label: "Pirates and the sea", word: "Salty", themes: ["Pirates", "Merfolk", "Sea Creatures", "Sharks", "Crabs"] },
+  { id: "K", em: "🛡️", label: "Knights and angels", word: "Noble", themes: ["Knights", "Angels", "Samurai", "Soldiers", "Pegasi"] },
+  { id: "R", em: "🤖", label: "Robots and gadgets", word: "Clockwork", themes: ["Robots", "Constructs", "Golems", "Thopters", "Myr", "Vehicles"] },
   { id: "U", em: "🎬", label: "Crossovers like Final Fantasy and Marvel", word: "Multiversal" },
   { id: "", em: "✨", label: "Anything goes", word: "" },
 ];
@@ -4947,7 +5002,14 @@ const QUIZ_POP = [
   { id: "gem", em: "💎", label: "A hidden gem" },
   { id: "", em: "🎁", label: "Surprise me" },
 ];
-const QUIZ_STEPS = 5;
+/* How serious the table is, as the bracket its decks usually sit in (0: no preference). Only used with the picks data. */
+const QUIZ_POWER = [
+  { id: 2, em: "🍻", label: "Casual and friendly" },
+  { id: 3, em: "⚔️", label: "Focused, but fair" },
+  { id: 4, em: "🔥", label: "Bring your best" },
+  { id: 0, em: "🎁", label: "Whatever’s fun" },
+];
+const QUIZ_STEPS = 6;
 const disc = loadDisc();
 let picksNonce = 0;
 let rolling = false;
@@ -4972,6 +5034,7 @@ function loadDisc() {
       colours: /^[WUBRG]{0,5}$/.test(q.colours || "") ? q.colours || "" : "",
       vibe: QUIZ_VIBES.some((v) => v.id === q.vibe) ? q.vibe : null,
       cx: [1, 2, 3].indexOf(q.cx) >= 0 ? q.cx : 0,
+      power: QUIZ_POWER.some((v) => v.id === q.power) ? q.power : null,
       pop: QUIZ_POP.some((v) => v.id === q.pop) ? q.pop : null,
       done: !!q.done,
       nonce: q.nonce | 0,
@@ -5090,7 +5153,7 @@ function renderQuiz() {
   const q = disc.quiz;
   if (!q || (!q.done && q.step === 0)) {
     box.innerHTML = '<div class="quiz-intro"><p class="em-row" aria-hidden="true">🐉🧙🐸👻🤖</p>' +
-      "<p>Five quick questions about how you like to play, then three commanders picked just for you.</p>" +
+      "<p>Six quick questions about how you like to play, then three commanders picked just for you from thousands of real decks.</p>" +
       '<button type="button" class="btn btn-mythic" data-quiz="start">Take the quiz</button></div>';
     return;
   }
@@ -5109,12 +5172,15 @@ function renderQuiz() {
   } else if (q.step === 4) {
     head = "How much brain power?"; hint = "Some commanders fit on a sticky note. Others come with homework.";
     opts = QUIZ_CX.map((o) => quizOptHTML(o, q.cx === o.id, "cx")).join("");
+  } else if (q.step === 5) {
+    head = "How serious is your table?"; hint = "From a relaxed night with friends to everyone bringing their sharpest deck.";
+    opts = QUIZ_POWER.map((o) => quizOptHTML(o, q.power === o.id, "power")).join("");
   } else {
     head = "Popular or obscure?"; hint = "Crowd favourites have heaps of deck ideas online. Hidden gems are the rarer finds.";
     opts = QUIZ_POP.map((o) => quizOptHTML(o, q.pop === o.id, "pop")).join("");
   }
   const canNext = q.step !== 1 || q.styles.length > 0;
-  box.innerHTML = '<div class="quiz-progress" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => '<i class="' + (i <= q.step ? "on" : "") + '"></i>').join("") + "</div>" +
+  box.innerHTML = '<div class="quiz-progress" aria-hidden="true">' + Array.from({ length: QUIZ_STEPS }, (_, k) => k + 1).map((i) => '<i class="' + (i <= q.step ? "on" : "") + '"></i>').join("") + "</div>" +
     '<p class="eyebrow">Question ' + q.step + " of " + QUIZ_STEPS + "</p>" +
     '<h4 class="quiz-q">' + esc(head) + "</h4><p class=\"quiz-hint\">" + esc(hint) + "</p>" +
     '<div class="quiz-opts" role="group" aria-label="' + esc(head) + '">' + opts + "</div>" +
@@ -5128,24 +5194,124 @@ function quizWhy(e, pref) {
   if (COMBO_NAMES[e.ci]) bits.push(COMBO_NAMES[e.ci]);
   return bits.join(" · ");
 }
+/* The quiz on the picks data: the answers become a set of EDHREC deck themes, and every commander is scored on how well
+   its decks match them, then its colours, flavour, complexity, how serious its decks usually are and how popular it is. */
+let quizCache = { key: "", picks: [] };
+function smartQuiz(q) {
+  const key = [q.styles.join(","), q.colours, q.vibe, q.cx, q.power, q.pop].join("|");
+  if (quizCache.key === key) return quizCache.picks;
+  // The play style asked for, as theme weights. A commander's match is judged on the share of its decks tagged with each
+  // theme, leaving out tribes (the flavour question covers those): otherwise Krenko would be all goblins and no tokens.
+  const Q = new Map();
+  q.styles.forEach((id) => {
+    const st = QUIZ_STYLES.find((x) => x.id === id);
+    if (st) for (const t in st.themes) {
+      const ti = PK.tagOf.get(t);
+      if (ti != null) Q.set(ti, Math.max(Q.get(ti) || 0, st.themes[t]));
+    }
+  });
+  let n2 = 0;
+  Q.forEach((v) => { n2 += v * v; });
+  Q.forEach((v, t) => Q.set(t, v / (Math.sqrt(n2) || 1)));
+  const styleFitOf = (j) => {
+    let dot = 0, len = 0;
+    for (const x of PK.th[j]) {
+      if (PK.tribal.has(x[0])) continue;
+      len += x[1] * x[1];
+      const w = Q.get(x[0]);
+      if (w) dot += w * x[1];
+    }
+    return len ? dot / Math.sqrt(len) : 0;
+  };
+  const vibe = QUIZ_VIBES.find((x) => x.id === q.vibe);
+  const vibeTags = vibe && vibe.themes ? vibe.themes.map((t) => PK.tagOf.get(t)).filter((x) => x != null) : [];
+  // Everyone who fits the colours, with how well their decks match the themes asked for.
+  const pool = [];
+  for (let j = 0; j < PK.count; j++) {
+    const e = CMD[j], dk = PK.dk[j];
+    if ((PK.fl[j] & 2) || !canLead(e) || dk < 40) continue; // fewer decks than that and EDHREC's themes are guesswork
+    const cols = e.ci === "C" ? "" : e.ci;
+    if (q.colours && cols.split("").some((c) => q.colours.indexOf(c) < 0)) continue; // outside the colours they chose
+    pool.push({ j: j, e: e, dk: dk, cols: cols, fit: styleFitOf(j) });
+  }
+  // Asked for a crowd favourite or a hidden gem: only those, unless that leaves too few to choose from.
+  const popular = (c) => (q.pop === "hot" ? c.dk >= 3000 : q.pop === "gem" ? c.dk >= 100 && c.dk <= 1500 : true);
+  let cands = pool.filter(popular);
+  if (cands.filter((c) => c.fit > 0.15).length < 6) cands = pool;
+  // It has to play the way they said, whatever else fits.
+  const best = Math.max(0, ...cands.map((c) => c.fit));
+  cands = cands.filter((c) => c.fit >= Math.max(0.1, best * 0.4));
+  const rand = rng(hashStr("quiz|" + key));
+  const scored = cands.map((c) => {
+    const j = c.j, e = c.e, dk = c.dk;
+    const colour = q.colours ? (c.cols ? 0.4 + 0.6 * c.cols.length / q.colours.length : 0.3) : 0.5;
+    let vibeHit = 0;
+    if (q.vibe === "U") vibeHit = PK.ub[j] >= 0 ? 1 : 0;
+    else if (q.vibe) vibeHit = e.tags.indexOf(q.vibe) >= 0 ? 1 : vibeTags.some((t) => PK.tv[j].has(t)) ? 0.8 : 0;
+    const cx = q.cx ? 1 - Math.abs(e.cx - q.cx) / 2 : 0.5;
+    const br = PK.br[j] / 10;
+    const power = q.power && br ? Math.max(0, 1 - Math.abs(br - q.power) / 1.5) : 0.5;
+    const settled = Math.min(1, Math.log10(dk + 1) / 4.5); // a gentle lean towards commanders with plenty of decks
+    return { j: j, vibeHit: vibeHit,
+      score: 0.45 * c.fit / (best || 1) + 0.12 * colour + (q.vibe ? 0.16 * vibeHit : 0) + 0.05 * cx + 0.08 * power + 0.08 * settled + 0.04 * rand() };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  const picks = [];
+  for (const c of scored) {
+    if (picks.length >= 12) break;
+    if (!picks.some((p) => near(p.j, c.j))) picks.push(c);
+  }
+  const now = nowMonth();
+  quizCache = { key: key, picks: picks.map((c, i) => {
+    const j = c.j, e = CMD[j], dk = PK.dk[j];
+    const themes = PK.th[j].filter((x) => Q.has(x[0])).sort((a, b) => b[1] * Q.get(b[0]) - a[1] * Q.get(a[0]))
+      .slice(0, 2).map((x) => lc(PK.tags[x[0]]));
+    let flavour = "";
+    if (c.vibeHit && vibe) {
+      if (q.vibe === "U") flavour = PK.ub[j] >= 0 ? "from " + PK.sets[PK.ub[j]] : "";
+      else {
+        const t = vibe.themes.find((name) => PK.tv[j].has(PK.tagOf.get(name)));
+        flavour = t ? (themes.indexOf(lc(t)) >= 0 ? "" : "with " + lc(t)) : q.vibe === "S" ? "with a spooky streak" : "with " + lc(vibe.label);
+      }
+    }
+    const fresh = PK.rl[j] && now - monthNum(PK.rl[j]) <= 6;
+    const tag = i === 0 ? "Best match" : dk <= 1500 && q.pop !== "hot" ? "Hidden gem" : fresh ? "New in print" : dk >= 15000 ? "Crowd favourite" : "";
+    const facts = [dk.toLocaleString("en-AU") + " decks on EDHREC"];
+    if (PK.br[j]) facts.push("usually bracket " + Math.round(PK.br[j] / 10));
+    return { e: e, tag: tag, meta: facts.join(" · "),
+      why: cap1(listJoin(themes.length ? themes : ownThemes(j, 2))) + (flavour ? ", " + flavour : "") + ". " + cap1(inColours(e.ci)) + "." };
+  }) };
+  return quizCache.picks;
+}
 function quizResultHTML(q) {
-  const pref = quizPref(q);
-  const all = suggest(pref, 12, hashStr("quiz|" + [q.styles.join(","), q.colours, q.vibe, q.cx, q.pop].join("|")));
-  const pages = Math.max(1, Math.ceil(all.length / 3));
-  const picks = all.slice((q.nonce % pages) * 3, (q.nonce % pages) * 3 + 3);
   const style = QUIZ_STYLES.find((x) => x.id === q.styles[0]) || QUIZ_STYLES[0];
   const vibe = QUIZ_VIBES.find((x) => x.id === q.vibe);
   const title = (vibe && vibe.word ? vibe.word + " " : "") + style.title;
+  const smart = needPicks();
+  let pages = 1, list;
+  if (smart) {
+    const all = smartQuiz(q);
+    pages = Math.max(1, Math.ceil(all.length / 3));
+    const picks = all.slice((q.nonce % pages) * 3, (q.nonce % pages) * 3 + 3);
+    list = picks.length ? '<ul class="cmdlets compact">' + picks.map((p) => cmdletHTML(p.e, p.why, p.tag, p.meta)).join("") + "</ul>" : "";
+  } else if (pkState === "loading") {
+    list = '<p class="chart-empty">Finding your commanders…</p>';
+  } else {
+    const pref = quizPref(q);
+    const all = suggest(pref, 12, hashStr("quiz|" + [q.styles.join(","), q.colours, q.vibe, q.cx, q.pop].join("|")));
+    pages = Math.max(1, Math.ceil(all.length / 3));
+    const picks = all.slice((q.nonce % pages) * 3, (q.nonce % pages) * 3 + 3);
+    list = picks.length ? '<ul class="cmdlets compact">' + picks.map((e) => cmdletHTML(e, quizWhy(e, pref))).join("") + "</ul>" : "";
+  }
   return '<div class="quiz-result"><p class="eyebrow">Your result</p>' +
     "<h4>You’re " + (/^[AEIOU]/.test(title) ? "an " : "a ") + esc(title) + "!</h4>" +
     '<p class="quiz-blurb">' + esc(style.blurb) + "</p>" +
-    (picks.length ? '<ul class="cmdlets compact">' + picks.map((e) => cmdletHTML(e, quizWhy(e, pref))).join("") + "</ul>"
-      : '<p class="chart-empty">Nothing fits all of that. Try more colours or a different vibe.</p>') +
+    (list || '<p class="chart-empty">Nothing fits all of that. Try more colours or a different vibe.</p>') +
     '<div class="quiz-nav">' + (pages > 1 ? '<button type="button" class="btn btn-quiet" data-quiz="more">Show me three more</button>' : "") +
     '<button type="button" class="link" data-quiz="again">Take it again</button></div></div>';
 }
 function quizAction(act) {
-  if (act === "start" || act === "again") disc.quiz = { step: 1, styles: [], colours: "", vibe: null, cx: 0, pop: null, done: false, nonce: 0 };
+  if (act === "start" || act === "again") disc.quiz = { step: 1, styles: [], colours: "", vibe: null, cx: 0, power: null, pop: null, done: false, nonce: 0 };
   else if (!disc.quiz) return;
   else if (act === "next") disc.quiz.step = Math.min(QUIZ_STEPS, disc.quiz.step + 1);
   else if (act === "back") {
@@ -5168,6 +5334,7 @@ function quizPick(val) {
   } else {
     if (kind === "vibe") q.vibe = id;
     else if (kind === "cx") q.cx = +id;
+    else if (kind === "power") q.power = +id;
     else if (kind === "pop") q.pop = id;
     // One-answer questions move straight on, after a moment to show the choice.
     saveDisc();
@@ -5421,6 +5588,23 @@ function go(view) {
   window.scrollTo(0, 0);
   render();
   if (view === "log") buildLogForm();
+}
+
+/* "Same table again": a new game with the same players in the same seats and the decks they played, dated today, with
+   everything else (winner, knockouts, notes, photo) left blank. It asks first if another game is half logged. */
+function logAgain(id) {
+  const g = state.games.find((x) => x.id === id);
+  if (!g) return;
+  const cur = draft && !draft.editingId ? draft : loadSavedDraft();
+  const started = cur && (cur.seats.some((s) => s.player || s.commander) || cur.winDetail || cur.notes || cur.keyCard || cur.endTurn || cur.minutes);
+  if (started && !window.confirm("Start logging a new game with this table? The game you’ve started logging will be cleared.")) return;
+  const d = newDraft();
+  d.seats = g.seats.map((s) => Object.assign(blankSeat(), { player: s.player, commander: s.commander, partner: s.partner, showPartner: !!s.partner }));
+  while (d.seats.length < 2) d.seats.push(blankSeat());
+  draft = d;
+  markDirty();
+  go("log");
+  toast("Same table, same decks. Good luck!");
 }
 
 function openLog(game) {
@@ -5927,7 +6111,9 @@ async function saveGame(e) {
     state.highlightId = res && res.id ? String(res.id) : null;
     applyLedger(res && res.ledger);
     const saved = state.games.find((x) => x.id === state.highlightId);
-    toast(editing ? "Game updated" : "Game saved", saved ? "Share to the group chat" : "", saved ? () => shareGame(saved) : null);
+    // A new game offers the same table again (Share is on its card); an edited one offers sharing as before.
+    if (editing) toast("Game updated", saved ? "Share to the group chat" : "", saved ? () => shareGame(saved) : null);
+    else toast("Game saved", saved ? "Same table again" : "", saved ? () => logAgain(saved.id) : null);
     go("games");
   } catch (err) {
     saving = false;
@@ -6258,6 +6444,10 @@ function bindEvents() {
     if (pl) { openPlayer(pl.dataset.player); return; }
     const star = t.closest("[data-star]");
     if (star) { toggleStar(star.dataset.star); return; }
+    const nfm = t.closest("[data-nfm]");
+    if (nfm) { dismissPick(nfm.dataset.nfmFor, nfm.dataset.nfm); return; }
+    const nfmBack = t.closest("[data-nfm-reset]");
+    if (nfmBack) { setNotForMe(norm(nfmBack.dataset.nfmReset), []); render(); toast("Hidden picks are back"); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
     if (t.closest("[data-reload]")) { location.reload(); return; }
     if (t.closest("#heroCap")) { state.spotShift++; renderHero(); return; }
@@ -6312,6 +6502,8 @@ function bindEvents() {
     if (del) { askDelete(del.dataset.del); return; }
     const sg = t.closest("[data-share-game]");
     if (sg) { const g = state.games.find((x) => x.id === sg.dataset.shareGame); if (g) shareGame(g); return; }
+    const ag = t.closest("[data-again]");
+    if (ag) { logAgain(ag.dataset.again); return; }
   });
 
   document.addEventListener("click", (e) => {

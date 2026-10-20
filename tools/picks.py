@@ -55,10 +55,17 @@ def load_commanders():
     return [{"name": r[0], "ci": r[1], "tags": r[2] if len(r) > 2 else "", "cx": int(r[3]) if len(r) > 3 and r[3] else 2} for r in rows]
 
 
+CREATURE_TYPES = set()  # every creature type, in the plural, so tribal themes ("Goblins") can be told apart
+
+
 def scryfall_facts(cmds):
     """Per commander: oracle id, type line, keywords, first printing (date and set), Universes Beyond franchise."""
+    from commanders import plural  # noqa: E402 (tools/ is on the path)
     by = {norm(c["name"]): c for c in cmds}
     for card in carddata.iter_bulk("oracle_cards"):
+        for part in (card.get("type_line") or "").split(" // "):
+            if "Creature" in part.split("—")[0] and "—" in part:
+                CREATURE_TYPES.update(plural(t) for t in part.split("—", 1)[1].split())
         c = by.get(norm(card["name"]))
         if not c or (card.get("legalities") or {}).get("commander") != "legal":
             continue
@@ -291,6 +298,10 @@ def main():
     on = collections.Counter(name for lst in out["sg"] for name in lst)
     out["sg"] = [[card_id(name) for k, name in enumerate(lst) if k < 2 or on[name] >= 2] for lst in out["sg"]]
     out["tags"] = tag_names
+    # Themes that are a creature type (and a few groupings like them), so the quiz can judge play style without them.
+    groups = {"Sea Creatures", "Outlaws", "Party", "Villains", "Heroes", "Time Lords"}
+    mechanics = {"Clues", "Sagas", "Shrines", "Mounts", "Eggs"}  # creature types somewhere, but here they're how a deck plays
+    out["tribal"] = [i for i, t in enumerate(tag_names) if (t in CREATURE_TYPES or t in groups) and t not in mechanics]
     out["cards"] = [k for k, _ in sorted(used_cards.items(), key=lambda kv: kv[1])]
     out["sets"] = [k for k, _ in sorted(sets.items(), key=lambda kv: kv[1])]
     out["count"] = n

@@ -115,6 +115,10 @@ web apps. Use a personal Google account instead.
   (`podLedger.timer.v1`), separate from the draft, so Clear form doesn't lose it. If someone saves without stopping it,
   the game still gets the timer's length (unless a length was typed in), and saving a game with the timer's length
   resets it for the next game. It's hidden when editing an older game.
+- **Same table again:** after a new game is saved, the "Game saved" message offers **Same table again** (Share is on the
+  game's card), and every game card has an **Again** button. Either one opens Log a game with the same players in the
+  same seats, the same commanders and partners and today's date, and everything else blank. If another game is half
+  logged, it asks before clearing it.
 - **Group generator:** pick how many people, choose each person (or a guest), and it splits them into groups. With
   **Mix it up** ticked it splits up whoever has shared the most tables in the logged games (every game together counts,
   recent ones most: a game four weeks ago counts half); unticked, it's a plain random draw. The rematch and even-tables
@@ -133,9 +137,14 @@ web apps. Use a personal Google account instead.
   `#commanders` open Standings.
 - **Discover:** taken out on 27 September 2026 and brought back on 20 October 2026 at Adam's request. Four panels:
   **Random commander** rolls any commander that can lead a deck, filtered by colours (with "Exactly these colours"),
-  theme and popularity, and shows the whole card with a "Rolled before" row; the **Commander quiz** asks five questions
-  (play style, colours, flavour, complexity, popularity) and names three commanders with a title like "Noble Swarm
-  Wrangler"; **Picks for a player** shows four commanders for anyone in the pod; and **Your shortlist** keeps every
+  theme and popularity, and shows the whole card with a "Rolled before" row; the **Commander quiz** asks six questions
+  (play style, colours, flavour, complexity, how serious the table is, popularity) and names three commanders at a time
+  (up to twelve) with a title like "Noble Swarm Wrangler". Since 20 October 2026 the quiz scores every commander on the
+  picks data: each play-style answer is a set of EDHREC deck themes (`themes` on `QUIZ_STYLES`), matched against the
+  share of each commander's decks tagged with them, leaving tribes out (those are the flavour question's job, through
+  `themes` on `QUIZ_VIBES`); "how serious" uses the bracket its decks usually sit in; and "a crowd favourite" or "a
+  hidden gem" keeps to commanders with 3,000 or more, or 100 to 1,500, EDHREC decks. Without `picks.json` it falls back to
+  the older tag scoring; **Picks for a player** shows four commanders for anyone in the pod; and **Your shortlist** keeps every
   commander someone has tapped **Save** on. Discover's state (the last roll, filters, quiz answers and shortlist) is kept
   in each browser only (`podLedger.discover.v1`), so it's never shared or stored in the sheet.
 - **Commanders to try:** each player page shows three picks at a time ("Other picks" for more, up to about fifteen),
@@ -150,7 +159,9 @@ web apps. Use a personal Google account instead.
   print** (first printed in the last six months), **Combo potential** (a known Commander Spellbook combo, for players
   who win by combo or play combo decks), **On the rise** (new decks up 40% or more lately) and **Something different**
   (a step sideways from their decks). Each says why, often naming cards both decks run, and mentions anyone else in
-  the pod who plays it. Commanders they've already played, Backgrounds and near-copies of their own commanders are
+  the pod who plays it. **Not for me** on a pick hides it from that player's picks on that phone (stored by player in
+  `podLedger.notForMe.v1`, with an Undo), and later picks lean away from commanders that play like it and from its
+  themes; "Bring back the picks you hid" under the list clears them. Commanders they've already played, Backgrounds and near-copies of their own commanders are
   left out. Save adds a pick to the Discover shortlist. The page only loads `picks.json` when picks are on screen; if it
   can't, the older picks from `commanders.tsv`'s theme letters and colours stand in.
 - **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
