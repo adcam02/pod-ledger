@@ -86,7 +86,10 @@ def main():
         names = [ln.split("\t")[0] for ln in commanders.splitlines() if ln]
         if meta.get("count") != len(names) or meta.get("names") != hashlib.sha1("\n".join(names).encode()).hexdigest()[:12]:
             raise SystemExit("src/picks.json was made for a different commander list. Run python3 tools/picks.py (see the README).")
-        version = hashlib.sha1(picks.read_bytes()).hexdigest()[:10]
+        cards = ROOT / "src" / "cards.json"  # which commanders' decks run each card, for picks from the cards people win with
+        if not cards.exists() or json.loads(cards.read_text(encoding="utf-8")).get("names") != meta["names"]:
+            raise SystemExit("src/cards.json is missing or out of date. Run python3 tools/picks.py (see the README).")
+        version = hashlib.sha1(picks.read_bytes() + cards.read_bytes()).hexdigest()[:10]
     if page.count(PICKS_MARKER) != 1:
         raise SystemExit("The template must contain the picks marker exactly once.")
     page = page.replace(PICKS_MARKER, json.dumps(version))
@@ -106,6 +109,7 @@ def main():
     (docs / "version.json").write_text(stamp, encoding="utf-8")
     if version:
         shutil.copyfile(picks, docs / "picks.json")
+        shutil.copyfile(cards, docs / "cards.json")
 
     links = LINK.findall(template)
     if len(links) != 1:
@@ -130,6 +134,7 @@ def main():
     (ROOT / "dev" / "version.json").write_text(stamp, encoding="utf-8")
     if version:
         shutil.copyfile(picks, ROOT / "dev" / "picks.json")
+        shutil.copyfile(cards, ROOT / "dev" / "cards.json")
 
     size = (docs / "index.html").stat().st_size
     print(f"docs/index.html         {size / 1024:.0f} KB, plus {len(list((ROOT / 'src' / 'site').iterdir()))} icon and manifest files")

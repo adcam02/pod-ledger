@@ -27,6 +27,7 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 |---|---|
 | `src/index.template.html` | Source for the page; edit this, then run the build |
 | `src/commanders.tsv` | Every card that can be a commander, with colour identity, theme tags and a complexity score (Scryfall data of 20 Oct 2026) |
+| `src/cards.json` | For about 6,000 cards that shape decks, the commanders whose decks lean on them most (EDHREC synergy), so the cards named in a player's wins can drive their picks (made by `tools/picks.py`; the build copies it next to the page) |
 | `src/picks.json` | The data behind the commander picks: for each commander, the ones whose real decks are most alike, its EDHREC themes, deck count, signature cards, bracket, first printing, popularity trend and best combo (made by `tools/picks.py`; the build copies it next to the page) |
 | `src/moved.html` | Source for the "We've moved" page the old link shows |
 | `src/site/` | The app icons, the web app manifest and `sw.js` (keeps the page on phones so it opens without signal), copied into `docs/` by the build |
@@ -60,8 +61,9 @@ access to api.scryfall.com, data.scryfall.io, json.edhrec.com and backend.comman
 2. `python3 tools/edhrec.py` (about 25 minutes the first time: one EDHREC page per commander, four a second at most;
    later runs only fetch new commanders, and `--refresh` fetches everything again for fresher deck data).
 3. `python3 tools/combos.py` (about 15 minutes the first time, the same way).
-4. `python3 tools/picks.py --check` (under a minute), then `python3 build.py`. The build stops if `src/picks.json` was
-   made for a different commander list, so step 4 always has to follow step 1.
+4. `python3 tools/picks.py --check` (under a minute; it writes `src/picks.json` and `src/cards.json`), then
+   `python3 build.py`. The build stops if either was made for a different commander list, so step 4 always has to
+   follow step 1.
 
 ## Updating the server
 
@@ -147,23 +149,36 @@ web apps. Use a personal Google account instead.
   the older tag scoring; **Picks for a player** shows four commanders for anyone in the pod; and **Your shortlist** keeps every
   commander someone has tapped **Save** on. Discover's state (the last roll, filters, quiz answers and shortlist) is kept
   in each browser only (`podLedger.discover.v1`), so it's never shared or stored in the sheet.
-- **Commanders to try:** each player page shows three picks at a time ("Other picks" for more, up to about fifteen),
-  and Discover's Picks for a player shows four. Since 20 October 2026 they come from real deck data rather than keyword
-  matching. `tools/picks.py` compares every commander with every other on the cards their EDHREC decks run (weighted by
-  EDHREC's synergy score, so the cards that make a deck what it is count most), the themes people tag those decks with,
-  Scryfall Tagger's tags for what the card does and the shape of the average deck. The page then builds each player's
-  taste from every deck they've logged (played more, won more and played lately count for more), along with their
-  colours, how popular or obscure their commanders are, their usual bracket, any Universes Beyond franchise and how
-  they win. Each pick is one of: **Plays like your …** (closest to one of their decks), **Hidden gem** (1,500 decks or
-  fewer on EDHREC), **Your first … deck** or **New colours** (the same idea in colours they haven't used), **New in
-  print** (first printed in the last six months), **Combo potential** (a known Commander Spellbook combo, for players
-  who win by combo or play combo decks), **On the rise** (new decks up 40% or more lately) and **Something different**
-  (a step sideways from their decks). Each says why, often naming cards both decks run, and mentions anyone else in
-  the pod who plays it. **Not for me** on a pick hides it from that player's picks on that phone (stored by player in
-  `podLedger.notForMe.v1`, with an Undo), and later picks lean away from commanders that play like it and from its
-  themes; "Bring back the picks you hid" under the list clears them. Commanders they've already played, Backgrounds and near-copies of their own commanders are
-  left out. Save adds a pick to the Discover shortlist. The page only loads `picks.json` when picks are on screen; if it
-  can't, the older picks from `commanders.tsv`'s theme letters and colours stand in.
+- **Commanders to try:** each player page shows three picks at a time ("Other picks" for more, up to about eighteen),
+  and Discover's Picks for a player shows four. They come from real deck data (`tools/picks.py` compares every
+  commander with every other on the cards their EDHREC decks run, weighted by EDHREC's synergy score, the themes people
+  tag those decks with, Scryfall Tagger's tags for what the card does and the shape of the average deck), matched to a
+  profile built from everything the ledger holds about the player (since 20 October 2026; `pickProfile` and `smartPicks`
+  in the page's script):
+  - every deck they've played, counting for more the more they've played it, won with it against what a seat at those
+    tables would expect, outlasted opponents with it, and played it lately;
+  - how they win (win types) and knock people out (the knockouts they're credited with), how they go out themselves
+    (their knockouts, or how the winner won), and who beats them;
+  - the cards named in their wins: "Card of the game" and the words in "What won it?", read against `src/cards.json`
+    (with a list of nicknames like Thoracle, Consult and Hoof in `CARD_NICKNAMES`; one-word names only count written as
+    a name, so "six goblins" isn't the card Six);
+  - their decks' shape and pace, colours, how popular and how strong (bracket, EDHREC salt) their commanders are, and
+    any Universes Beyond franchise;
+  - the pod: what wins at the table and what nobody plays;
+  - feedback: **Save** on one of their picks counts as liking it (its themes join their taste, and commanders like it
+    come up as "Like …, which you saved"; stored by player in `podLedger.liked.v1`), and **Not for me** hides one and
+    steers away from commanders like it (`podLedger.notForMe.v1`, with an Undo and "Bring back the picks you hid").
+
+  The picks are dealt out so each set of three is three different kinds: **Plays like your …**, **Runs the cards you
+  win with**, **Built for how you win**, **Like …, which you saved**, **Hidden gem** (1,500 decks or fewer on EDHREC),
+  **Your first … deck** / **New colours**, **Wins at your table**, **Plays around what beats you** (themes that blunt how
+  they usually go out, `COUNTER_TAGS`), **New in print**, **New to your pod**, **Combo potential**, **On the rise** and
+  **Something different**. Each says why from their own record ("You win by commander damage (4 of 6 wins)", "Your
+  wins came off Impact Tremors and Skullclamp, and its decks lean on both"), and mentions anyone else in the pod who
+  plays it. Commanders they've played or saved, Backgrounds and other printings of their own commanders (except as new
+  in print) are left out. **What these picks are based on**, above the picks, opens to show the profile. The page loads
+  `picks.json` when picks are on screen, and `cards.json` only for a player whose wins name cards; without them the older
+  picks from `commanders.tsv`'s theme letters stand in.
 - **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
   each visit. Tap it for another. On 25 September 2026 Adam cut the list to the 68 lines he liked; the lines about the
   pod itself (the leader, win streaks, commander suggestions, holidays) and the jokes aimed at a named player went too.

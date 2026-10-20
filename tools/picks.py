@@ -36,6 +36,7 @@ import carddata  # noqa: E402
 import edhrec  # noqa: E402
 
 OUT = ROOT / "src" / "picks.json"
+CARDS_OUT = ROOT / "src" / "cards.json"
 NB, NX, SIG, TH = 20, 8, 10, 8  # neighbours, across-colour neighbours, signature cards, themes kept per commander
 
 # EDHREC tags that say nothing about how a deck plays.
@@ -216,6 +217,38 @@ def b36(n, width):
     return out
 
 
+def write_card_index(cmds, n):
+    """src/cards.json: for cards that matter to some commander's decks, the commanders whose decks run them most, so the
+    page can turn the cards named in a player's games ("Card of the game", "What won it?") into picks. Each card keeps
+    its top 8 commanders by EDHREC synergy, as link() strings (similarity there is the synergy out of 100). Only cards
+    that are on three or more commanders' lists, with a synergy of 0.2 or more for at least one, are kept, and of those
+    the 6,000 that the most decks run (the cards people name are mostly the well-known ones)."""
+    by_card = collections.defaultdict(list)
+    decks_running = collections.Counter()
+    for i, c in enumerate(cmds):
+        d = c["ed"]
+        if not d or d["decks"] < 20 or "#" in c["tags"]:
+            continue
+        own = norm(c["name"])
+        for name, syn, inc, tag in d["cards"]:
+            if syn >= 0.08 and inc >= 0.08 and norm(name) != own:
+                by_card[name].append((syn * (0.5 + inc), i, syn))
+                decks_running[name] += inc * d["decks"]
+    keep = [k for k, e in by_card.items() if len(e) >= 3 and max(x[2] for x in e) >= 0.2]
+    keep = set(sorted(keep, key=lambda k: -decks_running[k])[:6000])
+    names, lists = [], []
+    for name, entries in sorted(by_card.items()):
+        if name not in keep:
+            continue
+        top = sorted(entries, reverse=True)[:8]
+        names.append(name)
+        lists.append("".join(link(i, min(100, round(100 * syn))) for _, i, syn in top))
+    meta = json.loads(OUT.read_text(encoding="utf-8"))
+    text = json.dumps({"count": n, "names": meta["names"], "cards": names, "by": lists}, separators=(",", ":"), ensure_ascii=False)
+    CARDS_OUT.write_text(text, encoding="utf-8")
+    print(f"Wrote {CARDS_OUT.relative_to(ROOT)}: {len(names)} cards, {len(text) / 1024:.0f} KB ({len(gzip.compress(text.encode())) / 1024:.0f} KB gzipped)")
+
+
 def main():
     check = "--check" in sys.argv
     cmds = load_commanders()
@@ -269,7 +302,7 @@ def main():
     def set_id(name):
         return sets.setdefault(name, len(sets)) if name else -1
 
-    out = {"dk": [], "th": [], "nb": [], "nx": [], "sg": [], "br": [], "rl": [], "st": [], "ub": [], "tr": [], "fl": [], "cb": {}}
+    out = {"dk": [], "th": [], "nb": [], "nx": [], "sg": [], "br": [], "rl": [], "st": [], "ub": [], "tr": [], "fl": [], "cb": {}, "sh": [], "sa": []}
     for i, c in enumerate(cmds):
         d = c["ed"] or {}
         out["dk"].append(d.get("decks", 0))
@@ -290,6 +323,10 @@ def main():
         out["ub"].append(set_id(c.get("ub", "")))
         out["tr"].append(trend(d) if d.get("decks", 0) >= 50 else 0)
         out["fl"].append((1 if c.get("gc") else 0) | (2 if not lead[i] else 0))
+        # The average deck's shape (shares of creatures, instants and sorceries, artifacts, enchantments and
+        # planeswalkers, then average mana value over 6), as six base-36 characters; empty without EDHREC data.
+        out["sh"].append("".join(b36(round(min(1, float(v)) * 35), 1) for v in shapes[i]) if shapes[i] is not None else "")
+        out["sa"].append(round(10 * d.get("salt", 0)) if d else 0)  # EDHREC's salt score times ten
         cb = combo_line(c)
         if cb:
             out["cb"][str(i)] = cb
@@ -324,6 +361,7 @@ def main():
     out["sg"] = ["".join(b36(k, 3) for k in lst) for lst in plain["sg"]]
     text = json.dumps(out, separators=(",", ":"), ensure_ascii=False)
     OUT.write_text(text, encoding="utf-8")
+    write_card_index(cmds, n)
     print(f"Wrote {OUT.relative_to(ROOT)}: {len(text) / 1024:.0f} KB ({len(gzip.compress(text.encode())) / 1024:.0f} KB gzipped)")
 
     if check:

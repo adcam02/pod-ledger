@@ -943,6 +943,16 @@ select.in.first-pick { max-width: 20rem; }
 .cmdlet-meta { margin: 0; font-size: 13px; color: var(--muted); }
 #plTry .cmdlets { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); } /* always three, so let them fill the row */
 .picks-foot { margin: 12px 0 0; }
+.pick-basis { margin: 0 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.pick-basis summary { padding: 10px 14px; cursor: pointer; font-size: 14.5px; font-weight: 700; color: var(--ink-2); }
+.pick-basis dl { display: grid; gap: 0; margin: 0; padding: 0 14px 4px; }
+.pick-basis dl div { display: grid; grid-template-columns: 7.2em minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.pick-basis dt { color: var(--muted); font-size: 13px; font-weight: 600; padding-top: 1px; }
+.pick-basis dd { margin: 0; font-size: 14.5px; color: var(--ink); overflow-wrap: anywhere; }
+.pick-basis dd small { color: var(--muted); font-size: 13px; }
+.pick-basis-note { margin: 0; padding: 8px 14px 12px; font-size: 13px; color: var(--muted); }
+[data-look="arcade"] .pick-basis { background: var(--glass); border-color: var(--glass-line); }
+[data-look="arcade"] .pick-basis dl div { border-color: var(--glass-line); }
 .cmdlet-foot .nfm { color: var(--muted); text-decoration-color: color-mix(in oklab, currentColor 35%, transparent); }
 .pick-tag { justify-self: start; padding: 2px 9px; border-radius: 999px; background: var(--mythic-soft); color: var(--ink); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
 .cmdlet-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 2px; }
@@ -1809,7 +1819,7 @@ select.in.first-pick { max-width: 20rem; }
       <li><b>A game timer</b> at the top of Log a game: start it when the game begins, stop it at the end and the length fills itself in</li>
       <li><b>Same table again:</b> after saving a game, or with Again on any game, the next one starts with the same players and decks</li>
       <li><b>The colours change:</b> each day the page takes on a different deck that’s doing well, and on game night it’s the latest winner’s. Tap the line under the pod’s name for another.</li>
-      <li><b>Much smarter commander picks</b> on every player page, matched to what thousands of real decks run, each saying why. Tap <b>Not for me</b> to hide one and steer the picks away from it.</li>
+      <li><b>Commander picks that know how you play:</b> how you win and knock people out, how you go out, the cards that won your games, how each deck does and what wins at your table, matched to thousands of real decks. Open “What these picks are based on” to see it. <b>Save</b> one for more like it, or <b>Not for me</b> for fewer.</li>
       <li><b>Discover is back</b> (in the bar along the bottom on phones): roll a random commander, take the commander quiz (now on real deck data, with a question on how serious your table is), and tap Save to keep a shortlist</li>
     </ul>
     <div class="cd-actions"><button type="button" class="btn btn-mythic" id="newsDone">Got it</button></div>
@@ -4516,9 +4526,10 @@ function picksFor(name, count, nonce) {
   const page = nonce % pages;
   return { taste: taste, picks: all.slice(page * count, page * count + count) };
 }
-function starHTML(name) {
+function starHTML(name, forPlayer) {
   const on = disc.shortlist.some((x) => norm(x) === norm(name));
-  return '<button type="button" class="star" data-star="' + esc(name) + '" aria-pressed="' + on + '">' + ICON.star + "<span>" + (on ? "Saved" : "Save") + "</span></button>";
+  return '<button type="button" class="star" data-star="' + esc(name) + '"' + (forPlayer ? ' data-star-for="' + esc(forPlayer) + '"' : "") +
+    ' aria-pressed="' + on + '">' + ICON.star + "<span>" + (on ? "Saved" : "Save") + "</span></button>";
 }
 function cmdletHTML(e, why, tag, meta, forPlayer) {
   return '<li class="cmdlet">' + artPicHTML([e.name], "cmdlet-art", true) +
@@ -4526,7 +4537,7 @@ function cmdletHTML(e, why, tag, meta, forPlayer) {
       '<div class="cmdlet-name">' + esc(e.name) + pipsHTML(e.ci, "sm") + "</div>" +
       (why ? '<p class="cmdlet-why">' + esc(why) + "</p>" : "") +
       (meta ? '<p class="cmdlet-meta">' + esc(meta) + "</p>" : "") +
-      '<div class="cmdlet-foot">' + starHTML(e.name) +
+      '<div class="cmdlet-foot">' + starHTML(e.name, forPlayer) +
         (forPlayer ? '<button type="button" class="link small nfm" data-nfm="' + esc(e.name) + '" data-nfm-for="' + esc(forPlayer) + '">Not for me</button>' : "") +
         '<a class="link small" href="' + esc(edhrecLink(e.name)) + '" target="_blank" rel="noopener">EDHREC</a>' +
         '<a class="link small" href="' + esc(scryfall(e.name)) + '" target="_blank" rel="noopener">Scryfall</a></div>' +
@@ -4542,7 +4553,7 @@ function picksHTML(name, count, nonce) {
   if (r && r.picks.length) {
     const pages = Math.max(1, Math.ceil(r.picks.length / count));
     const at = (nonce % pages) * count;
-    return '<ul class="cmdlets">' + r.picks.slice(at, at + count).map((p) => cmdletHTML(p.e, p.why, p.tag, p.meta, name)).join("") + "</ul>" + foot;
+    return basisHTML(r.P, r, name) + '<ul class="cmdlets">' + r.picks.slice(at, at + count).map((p) => cmdletHTML(p.e, p.why, p.tag, p.meta, name)).join("") + "</ul>" + foot;
   }
   // Without the picks file (or for decks it doesn't know), the older picks from themes and colours.
   const old = picksFor(name, count, nonce);
@@ -4584,7 +4595,7 @@ async function dropOldPicks() {
     for (const n of await caches.keys()) {
       if (n.indexOf("ledger-assets-") !== 0) continue;
       const c = await caches.open(n);
-      for (const r of await c.keys()) if (/\/picks\.json\?v=/.test(r.url) && !r.url.endsWith("v=" + PICKS_VERSION)) c.delete(r);
+      for (const r of await c.keys()) if (/\/(picks|cards)\.json\?v=/.test(r.url) && !r.url.endsWith("v=" + PICKS_VERSION)) c.delete(r);
     }
   } catch (e) { /* nothing to tidy */ }
 }
@@ -4606,6 +4617,8 @@ function preparePicks(d) {
   d.nx = d.nx.map((s) => chunks(s, 3, (i) => link(s, i)));
   d.th = d.th.map((s) => chunks(s, 4, (i) => [num(s, i, 2), num(s, i + 2, 2) / 10]));
   d.sg = d.sg.map((s) => chunks(s, 3, (i) => num(s, i, 3)));
+  d.shape = (d.sh || []).map((s) => (s ? s.split("").map((ch) => parseInt(ch, 36) / 35) : null));
+  d.sa = d.sa || [];
   const df = new Array(d.tags.length).fill(0);
   d.th.forEach((list) => list.forEach((x) => { df[x[0]]++; }));
   const idf = df.map((x) => Math.log((d.count + 1) / (x + 1)) + 0.2);
@@ -4631,80 +4644,258 @@ const monthNum = (yyyymm) => Math.floor(yyyymm / 100) * 12 + (yyyymm % 100);
 const nowMonth = () => { const d = new Date(); return d.getFullYear() * 12 + d.getMonth() + 1; };
 const deckCi = (ids) => WUBRG.split("").filter((c) => ids.some((id) => CMD[id].ci.indexOf(c) >= 0)).join("") || "C";
 
-/* Everything about a player's taste the picks use, from every game they've logged. Each deck counts for more the more
-   they've played it, the more it's won and the more recently it was out. */
+/* ---------- the card index (src/cards.json): which commanders' decks run each card ---------- */
+/* For about 6,000 cards that shape decks, the commanders whose decks lean on them most (EDHREC synergy). It's fetched
+   only for a player whose wins name cards, in "Card of the game" or "What won it?". */
+let CK = null;
+let ckState = "";
+function needCards() {
+  if (CK) return true;
+  if (ckState || !PICKS_VERSION) return false;
+  ckState = "loading";
+  fetch("cards.json?v=" + PICKS_VERSION)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+    .then((d) => {
+      if (!d || d.count !== CMD.length) throw new Error("cards.json is for a different commander list");
+      CK = prepareCards(d);
+      ckState = "ready";
+      smartCache.clear();
+      render();
+    })
+    .catch(() => { ckState = "failed"; smartCache.clear(); render(); });
+  return false;
+}
+/* Text as space-padded lower-case words, so a card name can be found inside it. */
+const cardKey = (s) => " " + String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
+  .replace(/[’'`]/g, "").replace(/[^a-z0-9]+/g, " ").trim() + " ";
+/* What people write instead of the full name. */
+const CARD_NICKNAMES = {
+  thoracle: "Thassa's Oracle", oracle: "Thassa's Oracle", consult: "Demonic Consultation", hoof: "Craterhoof Behemoth",
+  rift: "Cyclonic Rift", tithe: "Smothering Tithe", rhystic: "Rhystic Study", "ad naus": "Ad Nauseam", naus: "Ad Nauseam",
+  breach: "Underworld Breach", citadel: "Bolas's Citadel", tremors: "Impact Tremors", stampede: "Overwhelming Stampede",
+  triumph: "Triumph of the Hordes", torment: "Torment of Hailfire", exsang: "Exsanguinate", doubling: "Doubling Season",
+  labman: "Laboratory Maniac", "lab man": "Laboratory Maniac", flux: "Aetherflux Reservoir", kiki: "Kiki-Jiki, Mirror Breaker",
+  finale: "Finale of Devastation", ballista: "Walking Ballista", coat: "Coat of Arms", sanguine: "Sanguine Bond",
+  zulaport: "Zulaport Cutthroat", "blood artist": "Blood Artist", approach: "Approach of the Second Sun", necro: "Necropotence",
+  dockside: "Dockside Extortionist", "storm kiln": "Storm-Kiln Artist", "grave pact": "Grave Pact", reanimate: "Reanimate",
+  craterhoof: "Craterhoof Behemoth", isochron: "Isochron Scepter", dramatic: "Dramatic Reversal", basalt: "Basalt Monolith",
+  ashnods: "Ashnod's Altar", "phyrexian altar": "Phyrexian Altar", tymna: "Tymna the Weaver", "pitiless": "Pitiless Plunderer",
+  "mana crypt": "Mana Crypt", crypt: "Mana Crypt", "sword of feast": "Sword of Feast and Famine", "colossus hammer": "Colossus Hammer",
+  hammer: "Colossus Hammer", "akromas will": "Akroma's Will", "intruder alarm": "Intruder Alarm", "mirage mirror": "Mirage Mirror",
+};
+function prepareCards(d) {
+  const keys = d.cards.map(cardKey);
+  // One-word names ("Six", "Ponder") are often ordinary words too, so those only count written as a name (see cardsIn).
+  const single = keys.map((key) => key.trim().indexOf(" ") < 0);
+  return { names: d.cards, keys: keys, single: single, by: d.by, ix: new Map(d.cards.map((n, k) => [norm(n), k])), fans: new Map() };
+}
+/* The commanders whose decks lean on card k, as [index, synergy out of 100]. */
+function cardFans(k) {
+  if (!CK.fans.has(k)) {
+    const s = CK.by[k], out = [];
+    for (let i = 0; i + 3 <= s.length; i += 3) {
+      const v = (B64.indexOf(s[i]) << 12) | (B64.indexOf(s[i + 1]) << 6) | B64.indexOf(s[i + 2]);
+      out.push([v >> 5, Math.round((v & 31) * 100 / 31)]);
+    }
+    CK.fans.set(k, out);
+  }
+  return CK.fans.get(k);
+}
+/* Every card named in a piece of text, as indexes into the card index. */
+function cardsIn(text) {
+  const t = cardKey(text), out = new Set();
+  if (t.length < 5) return out;
+  CK.keys.forEach((key, k) => {
+    if (t.indexOf(key) < 0) return;
+    if (!CK.single[k]) { out.add(k); return; }
+    // A one-word name counts only with its capital letter, and a short one not just because it starts a sentence
+    // ("Six goblins"); a longer one like "Skullclamp" can.
+    const name = CK.names[k];
+    for (let at = text.indexOf(name); at >= 0; at = text.indexOf(name, at + 1)) {
+      const before = text.slice(0, at).trim(), after = text.charAt(at + name.length);
+      if ((name.length >= 7 || (before && !/[.!?:;·]$/.test(before))) && !/[A-Za-z]/.test(after)) { out.add(k); return; }
+    }
+  });
+  for (const nick in CARD_NICKNAMES) {
+    if (t.indexOf(" " + nick + " ") < 0) continue;
+    const k = CK.ix.get(norm(CARD_NICKNAMES[nick]));
+    if (k != null) out.add(k);
+  }
+  return out;
+}
+
+/* ---------- a player's profile, from everything the ledger records ---------- */
+/* Every deck (how often, how well and how lately: wins, finishing places, opponents outlasted), how they win and how
+   they knock people out, how they go out and to whom, the cards named in their wins, the shape of their decks, their
+   colours, how popular and how strong their commanders are, crossover franchises, and what they've saved or turned
+   down in their picks. */
+const LIKED_KEY = "podLedger.liked.v1";
+function likedPicks(key) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LIKED_KEY) || "{}") || {};
+    return Array.isArray(all[key]) ? all[key].filter((n) => typeof n === "string").slice(0, 100) : [];
+  } catch (e) { return []; }
+}
+function setLiked(key, names) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LIKED_KEY) || "{}") || {};
+    if (names.length) all[key] = names.slice(0, 100); else delete all[key];
+    localStorage.setItem(LIKED_KEY, JSON.stringify(all));
+  } catch (e) { /* storage blocked */ }
+  smartCache.clear();
+}
+const idsOfSeat = (s) => [s.commander, s.partner].map((nm) => { const e = nm && CMD_BY_NORM.get(norm(nm)); return e ? e.rank : -1; }).filter((x) => x >= 0);
+const unit = (m) => { let s = 0; m.forEach((v) => { s += v * v; }); s = Math.sqrt(s) || 1; m.forEach((v, t) => m.set(t, v / s)); return m; };
+const bump = (o, k, by) => { if (k != null && k !== "") o[k] = (o[k] || 0) + (by || 1); };
+
 function pickProfile(key) {
-  const decks = new Map(), wins = {};
-  let games = 0, won = 0;
-  state.games.forEach((g) => g.seats.forEach((s, i) => {
-    if (norm(s.player) !== key) return;
+  const decks = new Map(), wins = {}, kills = {}, outs = {}, lostTo = {};
+  const winTexts = [], winTurns = [];
+  let games = 0, won = 0, expected = 0, killCount = 0, losses = 0;
+  state.games.forEach((g) => {
+    const i = g.seats.findIndex((s) => norm(s.player) === key);
+    if (i < 0) return;
+    const s = g.seats[i], n = g.seats.length, isWin = g.winner === i;
     games++;
-    const w = g.winner === i;
-    if (w) { won++; wins[g.winType] = (wins[g.winType] || 0) + 1; }
-    const ids = [s.commander, s.partner].map((nm) => { const e = nm && CMD_BY_NORM.get(norm(nm)); return e ? e.rank : -1; }).filter((x) => x >= 0);
+    if (g.winner != null) expected += 1 / n;
+    const ol = outlastedIn(g)[i];
+    if (isWin) {
+      won++;
+      bump(wins, g.winType);
+      if (g.endTurn) winTurns.push(g.endTurn);
+      if (g.keyCard) winTexts.push({ card: g.keyCard });
+      if (g.winDetail) winTexts.push({ text: g.winDetail });
+    } else if (g.winner != null) {
+      losses++;
+      bump(outs, s.outHow || g.winType); // the knockout if it's logged, otherwise how the winner won
+      const w = g.seats[g.winner];
+      if (w && w.player) bump(lostTo, w.player);
+    }
+    g.seats.forEach((o, j) => { if (j !== i && o.outBy && norm(o.outBy) === key) { killCount++; bump(kills, o.outHow || "other"); } });
+    const ids = idsOfSeat(s);
     if (!ids.length) return;
     const k = ids.slice().sort((a, b) => a - b).join("+");
-    const d = decks.get(k) || { ids: ids, games: 0, wins: 0, last: "" };
+    const d = decks.get(k) || { ids: ids, games: 0, wins: 0, expected: 0, outlasted: 0, opponents: 0, last: "" };
     d.games++;
-    if (w) d.wins++;
+    if (isWin) d.wins++;
+    if (g.winner != null) d.expected += 1 / n;
+    d.outlasted += ol;
+    d.opponents += n - 1;
     if ((g.playedOn || "") > d.last) d.last = g.playedOn || "";
     decks.set(k, d);
-  }));
-  const list = Array.from(decks.values()).filter((d) => d.ids.some((id) => PK.tv[id].size || PK.nb[id].length));
+  });
+  // Each deck's weight: played more, won more (against what a seat at that table should win) and outlasted more, lately.
+  const known = Array.from(decks.values()).filter((d) => d.ids.some((id) => PK.tv[id].size || PK.nb[id].length));
   const mid = isoDaysAgo(60), old = isoDaysAgo(180);
-  list.forEach((d) => { d.w = Math.pow(d.games, 0.6) * (0.7 + 0.6 * d.wins / d.games) * (d.last >= mid ? 1 : d.last >= old ? 0.8 : 0.6); });
-  const top = Math.max(0, ...list.map((d) => d.w)) || 1;
-  list.forEach((d) => { d.w /= top; });
-  list.sort((a, b) => b.w - a.w);
-  const T = new Map(), colours = {}, ub = new Map(), owned = new Set();
-  let pop = 0, popW = 0, br = 0, brW = 0, ubW = 0, allW = 0;
+  known.forEach((d) => {
+    const edge = d.expected ? Math.max(-0.5, Math.min(1, (d.wins - d.expected) / Math.max(1, d.games) * 2)) : 0;
+    d.w = Math.pow(d.games, 0.6) * (0.75 + 0.35 * edge + 0.25 * (d.opponents ? d.outlasted / d.opponents : 0)) *
+      (d.last >= mid ? 1 : d.last >= old ? 0.8 : 0.6);
+  });
+  const top = Math.max(0, ...known.map((d) => d.w)) || 1;
+  known.forEach((d) => { d.w = Math.max(0.05, d.w / top); });
+  known.sort((a, b) => b.w - a.w);
+  const owned = new Set();
   decks.forEach((d) => d.ids.forEach((id) => owned.add(id)));
-  list.forEach((d) => {
+  // Themes, colours, popularity, power, salt, franchises and deck shape, deck by deck.
+  const T = new Map(), colours = {}, winColours = {}, ub = new Map(), shape = [0, 0, 0, 0, 0, 0];
+  let pop = 0, popW = 0, br = 0, brW = 0, salt = 0, saltW = 0, ubW = 0, allW = 0, shW = 0;
+  known.forEach((d) => {
     d.ids.forEach((id) => {
       PK.tv[id].forEach((v, t) => T.set(t, (T.get(t) || 0) + v * d.w / d.ids.length));
       if (PK.dk[id]) { pop += d.w * Math.log10(PK.dk[id] + 1); popW += d.w; }
       if (PK.br[id]) { br += d.w * PK.br[id]; brW += d.w; }
+      if (PK.dk[id] >= 20) { salt += d.w * PK.sa[id]; saltW += d.w; }
       if (PK.ub[id] >= 0) ub.set(PK.ub[id], (ub.get(PK.ub[id]) || 0) + d.w);
+      const sh = PK.shape[id];
+      if (sh) { sh.forEach((v, x) => { shape[x] += v * d.w; }); shW += d.w; }
     });
     if (d.ids.some((id) => PK.ub[id] >= 0)) ubW += d.w;
     allW += d.w;
-    for (const c of deckCi(d.ids)) if (c !== "C") colours[c] = (colours[c] || 0) + d.w;
+    for (const c of deckCi(d.ids)) if (c !== "C") { colours[c] = (colours[c] || 0) + d.w; if (d.wins) winColours[c] = (winColours[c] || 0) + d.wins; }
   });
-  let s = 0;
-  T.forEach((v) => { s += v * v; });
-  s = Math.sqrt(s) || 1;
-  T.forEach((v, t) => T.set(t, v / s));
-  return { key: key, decks: list, games: games, won: won, wins: wins, T: T, colours: colours, owned: owned,
-    pop: popW ? pop / popW : 3, br: brW ? br / brW : 0, ub: ub, ubShare: allW ? ubW / allW : 0 };
+  // Saves count as liking a commander: their themes join the taste at half weight.
+  const liked = likedPicks(key).map((n) => CMD_BY_NORM.get(norm(n))).filter(Boolean).map((e) => e.rank).filter((j) => !owned.has(j));
+  liked.forEach((j) => PK.tv[j].forEach((v, t) => T.set(t, (T.get(t) || 0) + 0.5 * v)));
+  unit(T);
+  return {
+    key: key, decks: known, allDecks: Array.from(decks.values()), games: games, won: won, expected: expected, losses: losses,
+    wins: wins, kills: kills, killCount: killCount, outs: outs, lostTo: lostTo, winTexts: winTexts,
+    winTurn: winTurns.length ? winTurns.reduce((a, b) => a + b, 0) / winTurns.length : 0,
+    T: T, colours: colours, winColours: winColours, owned: owned, liked: liked,
+    pop: popW ? pop / popW : 3, br: brW ? br / brW : 0, salt: saltW ? salt / saltW : 0, ub: ub, ubShare: allW ? ubW / allW : 0,
+    shape: shW ? shape.map((v) => v / shW) : null,
+  };
 }
-/* How a player wins, as the deck themes that win that way. */
-const STYLE_TAGS = { commander: ["Voltron", "Equipment", "Auras"], mill: ["Mill"], drain: ["Burn", "Lifedrain", "Aristocrats", "Group Slug"],
-  poison: ["Infect", "Proliferate", "Toxic"], combo: ["Combo"] };
-function styleFit(P, j) {
-  if (P.won < 2) return 0;
-  let s = 0;
-  for (const wt in STYLE_TAGS) {
-    const n = P.wins[wt] || 0;
-    if (!n) continue;
-    const hit = STYLE_TAGS[wt].some((t) => PK.tv[j].has(PK.tagOf.get(t))) || (wt === "combo" && PK.cb[j]);
-    if (hit) s += n / P.won;
-  }
-  return Math.min(1, s * 1.5);
-}
-/* Who else in the pod has played each commander. */
-function podCommanders(key) {
-  const m = new Map();
-  state.games.forEach((g) => g.seats.forEach((s) => {
-    if (norm(s.player) === key) return;
-    [s.commander, s.partner].forEach((nm) => {
-      const e = nm && CMD_BY_NORM.get(norm(nm));
-      if (!e) return;
-      if (!m.has(e.rank)) m.set(e.rank, new Set());
-      m.get(e.rank).add(s.player);
+
+/* How the pod plays: the themes of the decks that win, the themes everyone plays, and who plays which commander. */
+let podCache = null;
+function podContext() {
+  if (podCache && podCache.games === state.games) return podCache;
+  const W = new Map(), A = new Map(), leadWins = {}, leadSeats = {}, who = new Map();
+  let wins = 0;
+  state.games.forEach((g) => g.seats.forEach((s, i) => {
+    const ids = idsOfSeat(s);
+    ids.forEach((id) => {
+      if (!who.has(id)) who.set(id, new Set());
+      who.get(id).add(s.player);
+      PK.tv[id].forEach((v, t) => { A.set(t, (A.get(t) || 0) + v); if (g.winner === i) W.set(t, (W.get(t) || 0) + v); });
     });
+    // A deck's lead themes are its three strongest.
+    const lead = new Set();
+    ids.forEach((id) => Array.from(PK.tv[id].entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).forEach((x) => lead.add(x[0])));
+    lead.forEach((t) => { bump(leadSeats, t); if (g.winner === i) bump(leadWins, t); });
+    if (g.winner === i) wins++;
   }));
-  return m;
+  podCache = { games: state.games, W: unit(W), A: A, leadWins: leadWins, leadSeats: leadSeats, who: who, wins: wins, total: state.games.length };
+  return podCache;
 }
+
+/* How a player wins and knocks people out, and what tends to beat them, as deck themes. */
+const STYLE_TAGS = {
+  combat: ["Aggro", "Go Wide", "Extra Combats", "Stompy", "Anthems", "Attack Triggers"], commander: ["Voltron", "Equipment", "Auras"],
+  combo: ["Combo", "Storm"], drain: ["Aristocrats", "Lifedrain", "Burn", "Group Slug", "Pingers"], mill: ["Mill"],
+  poison: ["Infect", "Proliferate"], alt: ["Combo", "Control"],
+};
+const STYLE_WORDS = { combat: "combat damage", commander: "commander damage", combo: "combo", drain: "burn and drain", mill: "mill", poison: "poison", alt: "alt-win cards" };
+const COUNTER_TAGS = {
+  combat: ["Pillow Fort", "Lifegain", "Turbo Fog", "Defenders", "Control"], commander: ["Control", "Bounce", "Theft", "Pillow Fort"],
+  combo: ["Stax", "Control", "Counterspells", "Hatebears"], drain: ["Lifegain", "Pillow Fort"], mill: ["Reanimator", "Graveyard", "Self-Mill"],
+  poison: ["Control", "Lifegain"], alt: ["Stax", "Counterspells"],
+};
+function tagsHit(j, names) {
+  let best = 0;
+  names.forEach((name) => { const v = PK.tv[j].get(PK.tagOf.get(name)); if (v > best) best = v; });
+  return best;
+}
+/* Their usual ways to win and to knock people out, strongest first: [[win type, count], ...]. */
+function methods(P) {
+  const m = {};
+  for (const k in P.wins) if (STYLE_TAGS[k]) m[k] = (m[k] || 0) + P.wins[k] * 1.5;
+  for (const k in P.kills) if (STYLE_TAGS[k]) m[k] = (m[k] || 0) + P.kills[k];
+  return Object.keys(m).map((k) => [k, m[k]]).sort((a, b) => b[1] - a[1]);
+}
+function styleScore(P, j, ms) {
+  const tot = ms.reduce((a, x) => a + x[1], 0);
+  if (tot < 2) return 0;
+  let s = 0;
+  ms.forEach((x) => { s += (x[1] / tot) * Math.min(1, tagsHit(j, STYLE_TAGS[x[0]]) * 2.2); });
+  if (P.wins.combo && PK.cb[j]) s += 0.3 * P.wins.combo / Math.max(1, P.won);
+  return Math.min(1, s);
+}
+function counterScore(P, j) {
+  if (P.losses < 2) return 0;
+  let s = 0, tot = 0;
+  for (const k in P.outs) { if (!COUNTER_TAGS[k]) continue; tot += P.outs[k]; s += P.outs[k] * Math.min(1, tagsHit(j, COUNTER_TAGS[k]) * 2.2); }
+  return tot ? s / tot : 0;
+}
+function shapeSim(a, b) {
+  if (!a || !b) return 0.5;
+  let d = 0;
+  for (let i = 0; i < 6; i++) d += (a[i] - b[i]) * (a[i] - b[i]);
+  return Math.exp(-d / 0.06);
+}
+const leadTheme = (j) => { let best = -1, w = 0; PK.tv[j].forEach((v, t) => { if (v > w) { w = v; best = t; } }); return best; };
 const near = (a, b) => shortName(CMD[a].name) === shortName(CMD[b].name) ||
   PK.nb[a].some((x) => x[0] === b && x[1] >= 72) || PK.nb[b].some((x) => x[0] === a && x[1] >= 72);
 
@@ -4723,6 +4914,7 @@ function setNotForMe(key, names) {
     if (names.length) all[key] = names.slice(0, 200); else delete all[key];
     localStorage.setItem(NFM_KEY, JSON.stringify(all));
   } catch (e) { /* storage blocked: it lasts until the page closes */ }
+  smartCache.clear();
 }
 function dismissPick(player, name) {
   const key = norm(player), before = notForMe(key);
@@ -4732,35 +4924,55 @@ function dismissPick(player, name) {
   toast("Hidden from " + player + "’s picks", "Undo", () => { setNotForMe(key, before); render(); });
 }
 
-/* The picks for one player: a list in the order they're shown, each with the kind of pick it is ("close" plays like
-   one of their decks, "gem" few people play it, "colours" the same idea in colours they haven't used, "fresh" new in
-   print, "combo" a known combo for someone who wins that way, "rising" fast-growing on EDHREC, "wild" a step sideways). */
+/* ---------- the picks themselves ---------- */
+/* Candidates come from every direction the profile points: commanders whose decks run the same cards as theirs, ones
+   doing the same in other colours, one step further out, the best theme matches anywhere, the commanders whose decks
+   lean on the cards named in their wins, ones built for how they win, ones that blunt what beats them, what wins at
+   their table, and what they've saved. Each is scored on all of it, then the list is dealt out by kind so no one kind
+   crowds the rest out:
+     close    plays like one of their decks        cards    runs the cards they win with
+     style    built for how they win              counter  plays around what beats them
+     podwin   wins at their table                 podnew   a theme nobody in the pod plays
+     liked    like something they saved           gem      few people play it
+     colours  the same idea in other colours      fresh    new in print
+     combo    a known combo, for combo players    rising   fast-growing on EDHREC
+     wild     a step sideways from their decks */
 const smartCache = new Map();
 function smartPicks(name) {
   const key = norm(name);
   const hidden = notForMe(key).map((n) => CMD_BY_NORM.get(norm(n))).filter(Boolean).map((e) => e.rank);
-  const sig = key + "|" + state.games.length + "|" + todayISO() + "|" + hidden.join(",");
+  const sig = [key, state.games.length, todayISO(), hidden.join(","), likedPicks(key).length, ckState].join("|");
   if (smartCache.has(sig)) return smartCache.get(sig);
   const P = pickProfile(key);
-  const out = { P: P, picks: [] };
-  // Turned-down picks pull the taste away from their themes...
-  if (hidden.length) {
-    hidden.forEach((d) => PK.tv[d].forEach((v, t) => { if (P.T.has(t)) P.T.set(t, Math.max(0, P.T.get(t) - 0.35 * v / hidden.length)); }));
-    let n2 = 0;
-    P.T.forEach((v) => { n2 += v * v; });
-    P.T.forEach((v, t) => P.T.set(t, v / (Math.sqrt(n2) || 1)));
-  }
-  // ...and away from commanders that play like them.
-  const unlike = new Map();
-  hidden.forEach((d) => PK.nb[d].forEach((x) => unlike.set(x[0], Math.max(unlike.get(x[0]) || 0, x[1] / 100))));
-  hidden.forEach((d) => P.owned.add(d)); // and they're never shown again
+  const out = { P: P, picks: [], cards: new Map() };
   smartCache.set(sig, out);
   if (!P.decks.length) return out;
-  const pod = podCommanders(key);
+  // The cards named in their wins (once the card index is here).
+  if (P.winTexts.length && needCards()) {
+    const own = new Set(P.allDecks.flatMap((d) => d.ids.map((id) => norm(CMD[id].name))));
+    P.winTexts.forEach((w) => {
+      // Card of the game is a card's name on its own; "What won it?" is a sentence that may name a few.
+      const ks = w.card ? (CK.ix.has(norm(w.card)) ? new Set([CK.ix.get(norm(w.card))]) : cardsIn(w.card)) : cardsIn(w.text);
+      ks.forEach((k) => { if (!own.has(norm(CK.names[k]))) out.cards.set(k, (out.cards.get(k) || 0) + 1); });
+    });
+  }
+  // Turned-down picks pull the taste away from their themes, and from commanders like them.
+  if (hidden.length) {
+    hidden.forEach((d) => PK.tv[d].forEach((v, t) => { if (P.T.has(t)) P.T.set(t, Math.max(0, P.T.get(t) - 0.35 * v / hidden.length)); }));
+    unit(P.T);
+  }
+  const unlike = new Map(), likeSaved = new Map();
+  hidden.forEach((d) => PK.nb[d].forEach((x) => unlike.set(x[0], Math.max(unlike.get(x[0]) || 0, x[1] / 100))));
+  P.liked.forEach((d) => { likeSaved.set(d, 1); PK.nb[d].forEach((x) => { if (x[1] / 100 > (likeSaved.get(x[0]) || 0)) likeSaved.set(x[0], x[1] / 100); }); });
+  hidden.forEach((d) => P.owned.add(d));
+  P.liked.forEach((d) => P.owned.add(d)); // already on their shortlist
+
+  const pod = podContext();
+  const ms = methods(P);
   const cand = new Map();
   const touch = (j) => {
     let c = cand.get(j);
-    if (!c) { c = { j: j, like: 0, via: null, cross: 0, xvia: null, hop: 0, hvia: null }; cand.set(j, c); }
+    if (!c) { c = { j: j, like: 0, via: null, cross: 0, xvia: null, hop: 0, hvia: null, card: 0, cardsUsed: [] }; cand.set(j, c); }
     return c;
   };
   P.decks.forEach((d) => d.ids.forEach((id) => {
@@ -4768,18 +4980,34 @@ function smartPicks(name) {
     PK.nb[id].forEach((x) => { const c = touch(x[0]), v = x[1] / 100 * boost; if (v > c.like) { c.like = v; c.via = d; } });
     PK.nx[id].forEach((x) => { const c = touch(x[0]), v = x[1] / 100 * boost; if (v > c.cross) { c.cross = v; c.xvia = d; } });
   }));
-  // One step further out, from the closest few, for the wildcards.
   Array.from(cand.values()).filter((c) => c.like).sort((a, b) => b.like - a.like).slice(0, 12).forEach((c) => {
     PK.nb[c.j].slice(0, 10).forEach((x) => { const h = touch(x[0]), v = c.like * x[1] / 100 * 0.85; if (v > h.hop) { h.hop = v; h.hvia = c.via; } });
   });
-  // And the closest theme matches anywhere.
-  const fits = [];
-  for (let j = 0; j < PK.count; j++) { const f = themeCos(P.T, PK.tv[j]); if (f > 0.35) fits.push([j, f]); }
-  fits.sort((a, b) => b[1] - a[1]).slice(0, 80).forEach((x) => touch(x[0]));
+  // The commanders whose decks lean on the cards they win with.
+  let maxCard = 0;
+  out.cards.forEach((n, k) => cardFans(k).forEach((x) => {
+    const c = touch(x[0]);
+    c.card += n * x[1] / 100;
+    c.cardsUsed.push(k);
+    if (c.card > maxCard) maxCard = c.card;
+  }));
+  // The best matches anywhere for their themes, their ways of winning, what beats them and what wins at their table.
+  const best = (score, n) => {
+    const all = [];
+    for (let j = 0; j < PK.count; j++) { const v = score(j); if (v > 0.2) all.push([j, v]); }
+    all.sort((a, b) => b[1] - a[1]).slice(0, n).forEach((x) => touch(x[0]));
+  };
+  best((j) => themeCos(P.T, PK.tv[j]), 80);
+  if (ms.length) best((j) => styleScore(P, j, ms) * (0.5 + themeCos(P.T, PK.tv[j])), 40);
+  if (P.losses >= 2) best((j) => counterScore(P, j) * (0.4 + themeCos(P.T, PK.tv[j])), 30);
+  if (pod.wins >= 5) best((j) => themeCos(pod.W, PK.tv[j]) * (0.4 + themeCos(P.T, PK.tv[j])), 30);
+  likeSaved.forEach((v, j) => { if (v >= 0.4) touch(j); });
 
   const rand = rng(hashStr(key + "|" + todayISO()));
   const played = new Set(Object.keys(P.colours));
   const shorts = new Set(Array.from(P.owned).map((id) => shortName(CMD[id].name)));
+  const mine = new Set(Array.from(P.T.entries()).filter((x) => x[1] >= 0.15).map((x) => x[0]));
+  const topThemes = new Set(Array.from(P.T.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map((x) => x[0]));
   const now = nowMonth();
   const scored = [];
   cand.forEach((c) => {
@@ -4788,56 +5016,75 @@ function smartPicks(name) {
     c.fresh = !!PK.rl[j] && now - monthNum(PK.rl[j]) <= 6;
     if (dk < (c.fresh ? 3 : 12)) return;
     c.fit = themeCos(P.T, PK.tv[j]);
+    c.cardN = maxCard ? c.card / maxCard : 0;
+    c.style = styleScore(P, j, ms);
+    c.counter = counterScore(P, j);
+    c.shape = shapeSim(P.shape, PK.shape[j]);
     const cols = e.ci === "C" ? [] : e.ci.split("");
     c.newCols = cols.filter((x) => !played.has(x));
     c.colourFit = cols.length ? 1 - c.newCols.length / cols.length : 0.6;
     c.popFit = dk ? 1 - Math.min(1, Math.abs(Math.log10(dk + 1) - P.pop) / 2.5) : 0.4;
     c.power = PK.br[j] && P.br ? 1 - Math.min(1, Math.abs(PK.br[j] - P.br) / 15) : 0.6;
-    c.style = styleFit(P, j);
+    c.saltGap = P.br && P.br < 28 && PK.sa[j] > Math.max(18, P.salt + 6) ? 1 : 0; // a much saltier deck than a casual player runs
     c.ubFit = P.ubShare >= 0.3 && PK.ub[j] >= 0 ? (P.ub.has(PK.ub[j]) ? 1 : 0.6) : 0;
-    c.pod = pod.get(j);
-    c.base = 0.42 * Math.min(1, Math.max(c.like, c.hop * 0.9) / 0.9) + 0.26 * c.fit + 0.1 * c.colourFit + 0.08 * c.popFit +
-      0.06 * c.power + 0.05 * c.style + 0.03 * c.ubFit - (c.pod ? 0.05 : 0) - (shorts.has(shortName(e.name)) ? 0.15 : 0) -
-      0.3 * (unlike.get(j) || 0) + rand() * 0.04;
+    c.liked = likeSaved.get(j) || 0;
+    c.podPlayers = pod.who.get(j);
+    c.lead = leadTheme(j);
+    c.podWin = pod.wins >= 5 ? themeCos(pod.W, PK.tv[j]) : 0;
+    c.podNew = c.lead >= 0 && !(pod.leadSeats[c.lead] > 0) && !(pod.A.get(c.lead) > 0.3);
+    c.base = 0.24 * Math.min(1, Math.max(c.like, c.hop * 0.9) / 0.9) + 0.17 * c.fit + 0.12 * c.cardN + 0.1 * c.style + 0.07 * c.shape +
+      0.07 * c.colourFit + 0.06 * c.popFit + 0.05 * c.power + 0.04 * c.liked + 0.02 * c.ubFit + 0.02 * c.podWin -
+      (c.podPlayers ? 0.05 : 0) - (shorts.has(shortName(e.name)) ? 0.15 : 0) - 0.3 * (unlike.get(j) || 0) - 0.06 * c.saltGap + rand() * 0.03;
     scored.push(c);
   });
-  const topThemes = new Set(Array.from(P.T.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map((x) => x[0]));
-  const lead = (j) => { let best = -1, w = 0; PK.tv[j].forEach((v, t) => { if (v > w) { w = v; best = t; } }); return best; };
+  const fits = (c) => c.like > 0.25 || c.fit > 0.45 || c.cardN > 0.4;
   const wantsCombo = (P.wins.combo || 0) > 0 || (P.T.get(PK.tagOf.get("Combo")) || 0) > 0.15;
-  const fits2 = (c) => c.like > 0.25 || c.fit > 0.45;
-  const by = (f, keep) => scored.filter(keep).sort((a, b) => f(b) - f(a));
+  // Another printing of one of their own commanders only shows as new in print.
+  const by = (f, keep, sameOk) => scored.filter((c) => (sameOk || !shorts.has(shortName(CMD[c.j].name))) && keep(c)).sort((a, b) => f(b) - f(a));
   const lists = {
-    close: by((c) => c.like * 0.7 + c.base * 0.3, (c) => c.like > 0.3),
-    gem: by((c) => c.base, (c) => PK.dk[c.j] <= 1500 && fits2(c)),
+    close: by((c) => 0.65 * c.like + 0.35 * c.base, (c) => c.like > 0.3),
+    cards: by((c) => 0.55 * c.cardN + 0.45 * c.base, (c) => c.cardN >= 0.3),
+    style: by((c) => 0.5 * c.style + 0.5 * c.base, (c) => c.style >= 0.5 && (c.fit > 0.25 || c.like > 0.2)),
+    counter: by((c) => 0.45 * c.counter + 0.55 * c.base, (c) => c.counter >= 0.4 && (c.fit > 0.25 || c.colourFit >= 0.5)),
+    podwin: by((c) => 0.5 * c.podWin + 0.5 * c.base, (c) => c.podWin >= 0.35 && !topThemes.has(c.lead) && (c.fit > 0.2 || c.colourFit >= 0.5)),
+    podnew: by((c) => c.base, (c) => c.podNew && fits(c)),
+    liked: by((c) => 0.6 * c.liked + 0.4 * c.base, (c) => c.liked >= 0.5),
+    gem: by((c) => c.base, (c) => PK.dk[c.j] <= 1500 && fits(c)),
     colours: by((c) => c.cross * 0.6 + c.fit * 0.25 + c.popFit * 0.15, (c) => c.cross > 0.3),
-    fresh: by((c) => c.base, (c) => c.fresh && fits2(c)),
-    combo: wantsCombo ? by((c) => c.base, (c) => !!PK.cb[c.j] && fits2(c)) : [],
-    rising: by((c) => c.base, (c) => PK.tr[c.j] >= 40 && PK.dk[c.j] >= 100 && fits2(c)),
-    wild: by((c) => c.hop * 0.6 + c.fit * 0.2 + c.popFit * 0.2, (c) => c.hop > 0.2 && c.like < 0.35 && !topThemes.has(lead(c.j))),
+    fresh: by((c) => c.base, (c) => c.fresh && fits(c), true),
+    combo: wantsCombo ? by((c) => c.base, (c) => !!PK.cb[c.j] && fits(c)) : [],
+    rising: by((c) => c.base, (c) => PK.tr[c.j] >= 40 && PK.dk[c.j] >= 100 && fits(c)),
+    wild: by((c) => c.hop * 0.6 + c.fit * 0.2 + c.popFit * 0.2, (c) => c.hop > 0.2 && c.like < 0.35 && !topThemes.has(c.lead)),
   };
-  const ORDER = ["close", "gem", "colours", "fresh", "close", "wild", "combo", "rising", "gem", "colours", "close", "wild", "fresh", "combo", "close", "gem", "rising", "colours"];
+  // Dealt out so each set of three is three different kinds, with no more than one "plays like" in it.
+  // (What they saved comes early, so saving something visibly changes what comes next.)
+  const ORDER = ["close", "cards", "style", "liked", "gem", "colours", "podwin", "counter", "fresh", "close", "wild", "podnew",
+    "combo", "cards", "rising", "liked", "gem", "style", "colours", "close", "counter", "wild", "fresh"];
   const chosen = [], usedVia = new Set();
   for (const kind of ORDER) {
+    if (chosen.length >= 18) break;
     const list = lists[kind];
     let pick = null;
     for (let pass = 0; pass < 2 && !pick; pass++) {
-      pick = list.find((c) => !chosen.some((x) => x.c.j === c.j || near(x.c.j, c.j)) &&
-        (kind !== "close" || pass === 1 || !usedVia.has(c.via)));
+      // Like something they saved: only a repeat or the same character rules it out, since what they saved may well be
+      // close to the picks already shown.
+      const clash = (x, c) => x.c.j === c.j || (kind === "liked" ? shortName(CMD[x.c.j].name) === shortName(CMD[c.j].name) : near(x.c.j, c.j));
+      pick = list.find((c) => !chosen.some((x) => clash(x, c)) && (kind !== "close" || pass === 1 || !usedVia.has(c.via)));
     }
     if (!pick) continue;
     if (kind === "close") usedVia.add(pick.via);
     chosen.push({ c: pick, kind: kind });
   }
-  // Top up with the best of the rest if the special kinds came up short.
   for (const c of scored.slice().sort((a, b) => b.base - a.base)) {
     if (chosen.length >= 15) break;
+    if (shorts.has(shortName(CMD[c.j].name))) continue;
     if (!chosen.some((x) => x.c.j === c.j || near(x.c.j, c.j))) chosen.push({ c: c, kind: c.like > 0.3 ? "close" : "fit" });
   }
-  out.picks = chosen.map((x) => Object.assign({ e: CMD[x.c.j], kind: x.kind }, pickWords(P, x.c, x.kind)));
+  out.picks = chosen.map((x) => Object.assign({ e: CMD[x.c.j], kind: x.kind }, pickWords(P, x.c, x.kind, out, pod, ms)));
   return out;
 }
 
-/* The words on a pick: its tag, a line on why, and a few facts. */
+/* ---------- the words on a pick: its tag, a line on why, and a few facts ---------- */
 const lc = (t) => t.toLowerCase();
 const cap1 = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 function sharedThemes(ids, j, n) {
@@ -4850,6 +5097,9 @@ function sharedThemes(ids, j, n) {
 function ownThemes(j, n, skip) {
   return Array.from(PK.tv[j].entries()).filter((x) => !skip || !skip.has(x[0])).sort((a, b) => b[1] - a[1]).slice(0, n).map((x) => lc(PK.tags[x[0]]));
 }
+function themesIn(j, names, n) {
+  return names.map((t) => [t, PK.tv[j].get(PK.tagOf.get(t)) || 0]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, n).map((x) => lc(x[0]));
+}
 function sharedCards(ids, j, n) {
   const mine = new Set();
   ids.forEach((id) => PK.sg[id].forEach((k) => mine.add(k)));
@@ -4861,26 +5111,64 @@ function inColours(ci) {
   if (ci.length <= 3) return "in " + COMBO_NAMES[ci] + " colours";
   return "in " + (ci.length === 5 ? "all five colours" : COMBO_NAMES[ci].replace(/ \(.*\)$/, "") + " colours");
 }
-function pickWords(P, c, kind) {
+const nameOf = (d) => shortName(CMD[d.ids[0]].name).replace(/^The /, "");
+const ofCount = (n, total, what) => n + " of " + plural(total, what); // "4 of 7 games"
+function pickWords(P, c, kind, out, pod, ms) {
   const j = c.j;
   const via = kind === "colours" ? c.xvia || c.via : kind === "wild" ? c.hvia || c.via : c.via || c.xvia || c.hvia;
   const ids = via ? via.ids : [];
-  const your = via ? "your " + shortName(CMD[ids[0]].name).replace(/^The /, "") : "";
+  const your = via ? "your " + nameOf(via) : "";
   const shared = ids.length ? sharedThemes(ids, j, 3) : [];
   const themes = shared.length ? shared : ownThemes(j, 3);
   const like = (txt) => cap1(txt) + (your && shared.length ? ", like " + your : "") + ".";
   const cards = ids.length ? sharedCards(ids, j, 2) : [];
   const lean = PK.sg[j].map((k) => PK.cards[k]).filter((n) => n !== CMD[j].name).slice(0, 2);
+  const mineT = new Set();
+  ids.forEach((id) => PK.tv[id].forEach((v, t) => mineT.add(t)));
+  const plus = ids.length ? Array.from(PK.tv[j].entries()).filter((x) => !mineT.has(x[0]) && x[1] >= 0.35).sort((a, b) => b[1] - a[1]).map((x) => lc(PK.tags[x[0]]))[0] : "";
   const dk = PK.dk[j];
   let tag = "", why = "";
-  // What it brings that their deck doesn't: its strongest theme that the deck isn't tagged with.
-  const mine = new Set();
-  ids.forEach((id) => PK.tv[id].forEach((v, t) => mine.add(t)));
-  const plus = ids.length ? Array.from(PK.tv[j].entries()).filter((x) => !mine.has(x[0]) && x[1] >= 0.35).sort((a, b) => b[1] - a[1]).map((x) => lc(PK.tags[x[0]]))[0] : "";
   if (kind === "close" && your) {
     tag = "Plays like " + your;
+    const record = via.games >= 3 && via.wins ? " (" + ofCount(via.wins, via.games, "game") + " won)" : "";
     why = (shared.length ? cap1(listJoin(shared)) + (plus ? ", plus " + plus : "") + "." : "The same kind of deck.") +
-      (cards.length ? " Decks for both run " + listJoin(cards) + "." : lean.length ? " Its decks lean on " + listJoin(lean) + "." : "");
+      (cards.length ? " Decks for both run " + listJoin(cards) + "." : lean.length ? " Its decks lean on " + listJoin(lean) + "." : "") +
+      (record && P.decks.length >= 2 && via === P.decks[0] && via.wins / via.games >= 0.3 ? " Built off your best deck" + record + "." : "");
+  } else if (kind === "cards") {
+    tag = "Runs the cards you win with";
+    const named = Array.from(new Set(c.cardsUsed)).sort((a, b) => (out.cards.get(b) || 0) - (out.cards.get(a) || 0)).slice(0, 2).map((k) => CK.names[k]);
+    why = "Your wins came off " + listJoin(named) + (named.length > 1 ? ", and its decks lean on both." : ", a card its decks lean on.") +
+      (themes.length ? " " + cap1(listJoin(themes.slice(0, 2))) + "." : "");
+  } else if (kind === "style") {
+    tag = "Built for how you win";
+    const m = ms.find((x) => tagsHit(j, STYLE_TAGS[x[0]]) > 0) || ms[0];
+    const w = P.wins[m[0]] || 0, k = P.kills[m[0]] || 0;
+    const record = w >= 2 ? "You win by " + STYLE_WORDS[m[0]] + " (" + ofCount(w, P.won, "win") + ")"
+      : k >= 2 ? "Most of your knockouts are " + STYLE_WORDS[m[0]] + " (" + ofCount(k, P.killCount, "knockout") + ")"
+      : w === 1 && P.won > 1 ? "One of your " + P.won + " wins was by " + STYLE_WORDS[m[0]]
+      : "You win by " + STYLE_WORDS[m[0]];
+    const how = themesIn(j, STYLE_TAGS[m[0]], 2);
+    why = record + ", and its decks are built for it" + (how.length ? ": " + listJoin(how) : "") + ".";
+  } else if (kind === "counter") {
+    tag = "Plays around what beats you";
+    const worst = Object.keys(P.outs).filter((k) => COUNTER_TAGS[k]).sort((a, b) => P.outs[b] - P.outs[a])
+      .find((k) => tagsHit(j, COUNTER_TAGS[k]) > 0) || "combat";
+    const how = themesIn(j, COUNTER_TAGS[worst], 2);
+    why = "You’ve gone out to " + STYLE_WORDS[worst] + " " + plural(P.outs[worst] || 0, "time") + ". Its decks bring " + (how.length ? listJoin(how) : "the answers") + "." +
+      (shared.length ? " Still " + listJoin(shared.slice(0, 2)) + ", like " + your + "." : "");
+  } else if (kind === "podwin") {
+    tag = "Wins at your table";
+    const t = Array.from(PK.tv[j].entries()).filter((x) => pod.leadWins[x[0]]).sort((a, b) => pod.leadWins[b[0]] - pod.leadWins[a[0]])[0];
+    why = t ? cap1(lc(PK.tags[t[0]])) + " decks have won " + ofCount(pod.leadWins[t[0]], pod.total, "game") + " in your pod, and you haven’t leaned that way yet." +
+      (shared.length ? " It keeps the " + listJoin(shared.slice(0, 2)) + " of " + your + "." : "")
+      : "Its themes are the ones winning in your pod." ;
+  } else if (kind === "podnew") {
+    tag = "New to your pod";
+    why = "Nobody in your pod plays " + lc(PK.tags[c.lead]) + " yet." + (shared.length ? " It still fits " + your + ": " + listJoin(shared.slice(0, 2)) + "." : " " + like(listJoin(themes.slice(0, 2))));
+  } else if (kind === "liked") {
+    const src = P.liked.slice().sort((a, b) => (PK.nb[b].find((x) => x[0] === j) || [0, 0])[1] - (PK.nb[a].find((x) => x[0] === j) || [0, 0])[1])[0];
+    tag = src != null ? "Like " + shortName(CMD[src].name) + ", which you saved" : "Like the ones you saved";
+    why = cap1(listJoin(src != null ? sharedThemes([src], j, 3) : themes)) + ".";
   } else if (kind === "gem") {
     tag = "Hidden gem";
     why = "Only " + dk.toLocaleString("en-AU") + " decks on EDHREC. " + like(listJoin(themes));
@@ -4911,12 +5199,38 @@ function pickWords(P, c, kind) {
   }
   const facts = [];
   if (kind !== "gem" && dk) facts.push(dk.toLocaleString("en-AU") + " decks on EDHREC");
-  // The bracket only when it's not what they usually play.
   const br = Math.round(PK.br[j] / 10), mineBr = Math.round(P.br / 10);
   if (br && mineBr && br !== mineBr) facts.push("usually bracket " + br + (br > mineBr ? ", a step up" : ", a gentler deck"));
   if (c.ubFit && PK.ub[j] >= 0) facts.push(PK.sets[PK.ub[j]]);
-  if (c.pod) facts.push(listJoin(Array.from(c.pod)) + " plays it too");
+  if (c.podPlayers) facts.push(listJoin(Array.from(c.podPlayers)) + " plays it too");
   return { tag: tag, why: why, meta: facts.join(" · ") };
+}
+
+/* What a player's picks are built from, in a few lines (it opens under "Commanders to try"). */
+function basisHTML(P, out, name) {
+  if (!P.games) return "";
+  const rows = [];
+  const decks = P.decks.slice(0, 3).map((d) => esc(nameOf(d)) + (d.games >= 2 ? " <small>" + (d.wins ? ofCount(d.wins, d.games, "game") + " won" : plural(d.games, "game")) + "</small>" : ""));
+  if (decks.length) rows.push(["Decks", decks.join(", ") + (P.decks.length > 3 ? " and " + (P.decks.length - 3) + " more" : "")]);
+  const wins = Object.keys(P.wins).filter((k) => STYLE_WORDS[k]).sort((a, b) => P.wins[b] - P.wins[a]).map((k) => STYLE_WORDS[k] + " ×" + P.wins[k]);
+  if (P.won) rows.push(["Wins", plural(P.won, "win") + (wins.length ? ": " + esc(wins.slice(0, 3).join(", ")) : "") + (P.winTurn ? " · usually by turn " + Math.round(P.winTurn) : "")]);
+  const kills = Object.keys(P.kills).filter((k) => STYLE_WORDS[k]).sort((a, b) => P.kills[b] - P.kills[a]);
+  if (P.killCount) rows.push(["Knockouts", plural(P.killCount, "knockout") + (kills.length ? ", mostly " + esc(STYLE_WORDS[kills[0]]) : "")]);
+  const outs = Object.keys(P.outs).filter((k) => STYLE_WORDS[k]).sort((a, b) => P.outs[b] - P.outs[a]).map((k) => STYLE_WORDS[k] + " ×" + P.outs[k]);
+  if (outs.length) rows.push(["Goes out to", esc(outs.slice(0, 3).join(", "))]);
+  const themes = Array.from(P.T.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map((x) => lc(PK.tags[x[0]]));
+  if (themes.length) rows.push(["Loves", esc(listJoin(themes))]);
+  const cards = Array.from(out.cards.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map((x) => CK.names[x[0]]);
+  if (cards.length) rows.push(["Won with", esc(listJoin(cards))]);
+  else if (P.winTexts.length && ckState === "loading") rows.push(["Won with", "reading the cards in their wins…"]);
+  const cols = Object.keys(P.colours).sort((a, b) => P.colours[b] - P.colours[a]).map((c) => COLOUR_NAMES[c]);
+  const popWord = P.pop >= 4 ? "popular commanders" : P.pop >= 3.2 ? "well-known commanders" : "niche commanders";
+  rows.push(["Plays", esc(popWord) + (P.br ? " · bracket " + Math.round(P.br / 10) : "") + (cols.length ? " · mostly " + esc(listJoin(cols.slice(0, 2))) : "")]);
+  if (P.liked.length) rows.push(["Saved", esc(listJoin(P.liked.slice(0, 3).map((j) => shortName(CMD[j].name)))) + (P.liked.length > 3 ? " and more" : "")]);
+  return '<details class="pick-basis"><summary>What these picks are based on</summary><dl>' +
+    rows.map((r) => "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>").join("") + "</dl>" +
+    '<p class="pick-basis-note">From ' + plural(P.games, "logged game") + ", plus what thousands of real decks on EDHREC run" +
+    (notForMe(norm(name)).length ? ", minus what was marked Not for me" : "") + ".</p></details>";
 }
 
 /* ---------- the splash message ---------- */
@@ -6443,7 +6757,15 @@ function bindEvents() {
     const pl = t.closest("[data-player]");
     if (pl) { openPlayer(pl.dataset.player); return; }
     const star = t.closest("[data-star]");
-    if (star) { toggleStar(star.dataset.star); return; }
+    if (star) {
+      // Saving one of a player's picks also tells their picks they liked it (and un-saving takes that back).
+      if (star.dataset.starFor) {
+        const k = norm(star.dataset.starFor), had = likedPicks(k), was = had.some((n) => norm(n) === norm(star.dataset.star));
+        setLiked(k, was ? had.filter((n) => norm(n) !== norm(star.dataset.star)) : had.concat([star.dataset.star]));
+      }
+      toggleStar(star.dataset.star);
+      return;
+    }
     const nfm = t.closest("[data-nfm]");
     if (nfm) { dismissPick(nfm.dataset.nfmFor, nfm.dataset.nfm); return; }
     const nfmBack = t.closest("[data-nfm-reset]");
