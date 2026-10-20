@@ -4,7 +4,8 @@
     python3 build.py
 
 Writes docs/, the site GitHub Pages serves: index.html from src/index.template.html
-plus the commander list in src/commanders.tsv, and the icons and manifest from
+plus the commander list in src/commanders.tsv, picks.json (src/picks.json, the data
+behind the commander picks, from tools/picks.py), and the icons and manifest from
 src/site/. Writes apps-script/Index.html, the "we've moved" page the old Apps Script
 link now shows (src/moved.html pointing at LEDGER_LINK). And writes dev/preview.html,
 the app wired to an in-memory pretend spreadsheet (dev/mock-gas.js running the real
@@ -18,6 +19,7 @@ import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent
 MARKER = '/*__COMMANDERS__*/""'
+PICKS_MARKER = '/*__PICKS__*/""'
 APP_SCRIPT_START = "<script>\n(function () {"
 LINK = re.compile(r'const LEDGER_LINK = "(https://[^"]+)";')
 # Preview only: stand in a commander as the leader (to try the banner art and colours it brings), and pretend the
@@ -74,12 +76,27 @@ def main():
                .replace(" ", "\\u2028")
                .replace(" ", "\\u2029"))
     page = template.replace(MARKER, literal)
+    # The picks data goes next to the page. The page asks for it by a fingerprint of its contents, so a phone that kept an
+    # older copy for offline use fetches the new one.
+    picks = ROOT / "src" / "picks.json"
+    version = ""
+    if picks.exists():
+        meta = json.loads(picks.read_text(encoding="utf-8"))
+        names = [ln.split("\t")[0] for ln in commanders.splitlines() if ln]
+        if meta.get("count") != len(names) or meta.get("names") != hashlib.sha1("\n".join(names).encode()).hexdigest()[:12]:
+            raise SystemExit("src/picks.json was made for a different commander list. Run python3 tools/picks.py (see the README).")
+        version = hashlib.sha1(picks.read_bytes()).hexdigest()[:10]
+    if page.count(PICKS_MARKER) != 1:
+        raise SystemExit("The template must contain the picks marker exactly once.")
+    page = page.replace(PICKS_MARKER, json.dumps(version))
 
     docs = ROOT / "docs"
     docs.mkdir(exist_ok=True)
     (docs / "index.html").write_text(page, encoding="utf-8")
     (docs / ".nojekyll").write_text("", encoding="utf-8")
     copy_site(docs)
+    if version:
+        shutil.copyfile(picks, docs / "picks.json")
 
     links = LINK.findall(template)
     if len(links) != 1:
@@ -101,9 +118,12 @@ def main():
     preview = preview.replace("</body>", SAMPLE_PICKER + "</body>", 1)
     (ROOT / "dev" / "preview.html").write_text(preview, encoding="utf-8")
     copy_site(ROOT / "dev")
+    if version:
+        shutil.copyfile(picks, ROOT / "dev" / "picks.json")
 
     size = (docs / "index.html").stat().st_size
     print(f"docs/index.html         {size / 1024:.0f} KB, plus {len(list((ROOT / 'src' / 'site').iterdir()))} icon and manifest files")
+    print(f"docs/picks.json         {picks.stat().st_size / 1024:.0f} KB, version {version}" if version else "docs/picks.json         none (run tools/picks.py): the page uses its simpler picks")
     print(f"apps-script/Index.html  the moved page, pointing at {links[0]}")
     print("dev/preview.html        built, and dev/moved.html to look at the moved page")
     # Every release should say what changed: the page shows this list once on each phone whenever it changes.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild src/commanders.tsv from the MTG Lab card database.
+"""Rebuild src/commanders.tsv from Scryfall's card data.
 
     python3 tools/commanders.py            write src/commanders.tsv
     python3 tools/commanders.py --check    also print the tags for some well-known commanders
@@ -12,6 +12,9 @@ Colour identity is "WUBRG" letters or "C". Tags are single letters: lower case f
 deck plays, upper case for its flavour (see STYLES and VIBES below; the page has the same
 lists), and "#" marks a Background. Complexity is 1 (short and simple) to 3 (lots of text). The tags come from simple
 patterns in the rules text, so they are a fair guess rather than a verdict.
+
+The cards come from the MTG Lab database (~/mtg-lab/data/cards.sqlite) when it's there, and otherwise from Scryfall's
+bulk oracle file, downloaded and cached by tools/carddata.py.
 """
 import gzip
 import json
@@ -21,6 +24,9 @@ import sqlite3
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import carddata  # noqa: E402
+
 DB = pathlib.Path.home() / "mtg-lab" / "data" / "cards.sqlite"
 BULK = pathlib.Path.home() / "mtg-lab" / "data" / "cache" / "oracle_cards.jsonl.gz"
 OUT = ROOT / "src" / "commanders.tsv"
@@ -198,25 +204,43 @@ def creature_types(type_line):
 
 
 def load_ub_names():
-    """Names of Universes Beyond cards, from Scryfall's bulk file (skipped if it isn't there)."""
-    if not BULK.exists():
-        return set()
-    out = set()
-    with gzip.open(BULK, "rt", encoding="utf-8") as f:
-        for line in f:
-            c = json.loads(line)
-            if "universesbeyond" in (c.get("promo_types") or []):
-                out.add(c["name"])
-    return out
+    """Names of Universes Beyond cards, from Scryfall's bulk file."""
+    if BULK.exists():
+        with gzip.open(BULK, "rt", encoding="utf-8") as f:
+            cards = [json.loads(line) for line in f]
+    else:
+        cards = carddata.iter_bulk("oracle_cards")
+    return {c["name"] for c in cards if "universesbeyond" in (c.get("promo_types") or [])}
+
+
+def load_cards():
+    """(commander rows, every creature type line): from the MTG Lab database, or Scryfall's oracle file without it.
+    Each row is (name, colour identity JSON, type line, rules text, layout, EDHREC rank, faces JSON, power)."""
+    if DB.exists():
+        con = sqlite3.connect(DB)
+        rows = con.execute("""SELECT name, color_identity, type_line, oracle_text, layout, edhrec_rank, faces, power
+                              FROM cards WHERE legal_commander = 1""").fetchall()
+        lines = [tl for (tl,) in con.execute(
+            "SELECT type_line FROM cards WHERE type_line LIKE '%Creature%' OR type_line LIKE '%Tribal%' OR type_line LIKE '%Kindred%'")]
+        return rows, lines
+    rows, lines = [], []
+    for c in carddata.iter_bulk("oracle_cards"):
+        tl = c.get("type_line") or ""
+        if re.search(r"\b(Creature|Tribal|Kindred)\b", tl):
+            lines.append(tl)
+        if (c.get("legalities") or {}).get("commander") != "legal":
+            continue
+        faces = c.get("card_faces")
+        rows.append((c["name"], json.dumps(c.get("color_identity") or []), tl, c.get("oracle_text") or "", c.get("layout") or "",
+                     c.get("edhrec_rank"), json.dumps(faces) if faces else None, c.get("power")))
+    return rows, lines
 
 
 def main():
     check = "--check" in sys.argv
-    con = sqlite3.connect(DB)
-    rows = con.execute("""SELECT name, color_identity, type_line, oracle_text, layout, edhrec_rank, faces, power
-                          FROM cards WHERE legal_commander = 1""").fetchall()
+    rows, type_lines = load_cards()
     all_types = set()
-    for (tl,) in con.execute("SELECT type_line FROM cards WHERE type_line LIKE '%Creature%' OR type_line LIKE '%Tribal%' OR type_line LIKE '%Kindred%'"):
+    for tl in type_lines:
         for part in tl.split(" // "):
             if re.search(r"\b(Creature|Tribal|Kindred)\b", part.split("—")[0]):
                 all_types.update(creature_types(part))
@@ -248,7 +272,7 @@ def main():
             continue
         cis = json.loads(ci)
         cistr = "".join(c for c in WUBRG if c in cis) or "C"
-        disp = name.split(" // ")[0] if layout in ("transform", "modal_dfc", "flip", "adventure", "split", "meld", "reversible_card") else name
+        disp = name.split(" // ")[0]  # two-faced, adventure, prepare and the like go by their front face
 
         body = clean_text(name, texts)
         low = body.lower()

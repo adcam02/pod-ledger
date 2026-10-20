@@ -26,7 +26,8 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 | Path | What it is |
 |---|---|
 | `src/index.template.html` | Source for the page; edit this, then run the build |
-| `src/commanders.tsv` | Every card that can be a commander, with colour identity, theme tags and a complexity score (from `~/mtg-lab/data/cards.sqlite`, Scryfall data of 16 Aug 2026) |
+| `src/commanders.tsv` | Every card that can be a commander, with colour identity, theme tags and a complexity score (Scryfall data of 20 Oct 2026) |
+| `src/picks.json` | The data behind the commander picks: for each commander, the ones whose real decks are most alike, its EDHREC themes, deck count, signature cards, bracket, first printing, popularity trend and best combo (made by `tools/picks.py`; the build copies it next to the page) |
 | `src/moved.html` | Source for the "We've moved" page the old link shows |
 | `src/site/` | The app icons, the web app manifest and `sw.js` (keeps the page on phones so it opens without signal), copied into `docs/` by the build |
 | `src/icons/` | Versions of the icon for iPhones and Android; `sh tools/icons.sh` turns them into the PNGs in `src/site/` |
@@ -35,6 +36,9 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 | `apps-script/Index.html` | The moved page (built from `src/moved.html`) |
 | `apps-script/appsscript.json` | The Apps Script manifest: time zone, web app settings, the Drive service and the two permissions the script asks for |
 | `tools/commanders.py` | `python3 tools/commanders.py` rebuilds `src/commanders.tsv`; add `--check` to print the tags for some well-known commanders |
+| `tools/carddata.py` | Downloads Scryfall's bulk card files for the tools and keeps them in `~/.cache/pod-ledger` (or `$POD_LEDGER_CACHE`) for a week |
+| `tools/edhrec.py`, `tools/combos.py` | Fetch each commander's EDHREC page and its best-known combos from Commander Spellbook into that cache (slowly, and only what's missing) |
+| `tools/picks.py` | `python3 tools/picks.py` works out which commanders play alike and writes `src/picks.json`; add `--check` to print some examples |
 | `build.py` | `python3 build.py` rebuilds `docs/`, `apps-script/Index.html` and the local preview |
 | `dev/` | Local testing: an in-memory pretend spreadsheet running the real `Code.gs` |
 
@@ -46,6 +50,18 @@ Every game is stored as one row in a Google Sheet that you own, so nobody else n
 2. On GitHub, open the repository's `docs` folder, choose **Add file → Upload files**, drop in the new
    `docs/index.html` (and any other changed files from `docs/`) and **Commit changes**. The site updates
    within a minute or two.
+
+## Updating the commander data
+
+Every few months (or after a new set), refresh the commander list and the picks. It needs Python 3 with numpy, and
+access to api.scryfall.com, data.scryfall.io, json.edhrec.com and backend.commanderspellbook.com:
+
+1. `python3 tools/commanders.py` (a few seconds once the Scryfall files are cached).
+2. `python3 tools/edhrec.py` (about 25 minutes the first time: one EDHREC page per commander, four a second at most;
+   later runs only fetch new commanders, and `--refresh` fetches everything again for fresher deck data).
+3. `python3 tools/combos.py` (about 15 minutes the first time, the same way).
+4. `python3 tools/picks.py --check` (under a minute), then `python3 build.py`. The build stops if `src/picks.json` was
+   made for a different commander list, so step 4 always has to follow step 1.
 
 ## Updating the server
 
@@ -122,9 +138,21 @@ web apps. Use a personal Google account instead.
   Wrangler"; **Picks for a player** shows four commanders for anyone in the pod; and **Your shortlist** keeps every
   commander someone has tapped **Save** on. Discover's state (the last roll, filters, quiz answers and shortlist) is kept
   in each browser only (`podLedger.discover.v1`), so it's never shared or stored in the sheet.
-- **Commanders to try:** each player page suggests three commanders from the themes and colours of the decks they've
-  played; "Other picks" shows another three, and Save adds one to the Discover shortlist. The themes come from
-  `tools/commanders.py`, which reads each card's rules text, so they're a good guess, not gospel.
+- **Commanders to try:** each player page shows three picks at a time ("Other picks" for more, up to about fifteen),
+  and Discover's Picks for a player shows four. Since 20 October 2026 they come from real deck data rather than keyword
+  matching. `tools/picks.py` compares every commander with every other on the cards their EDHREC decks run (weighted by
+  EDHREC's synergy score, so the cards that make a deck what it is count most), the themes people tag those decks with,
+  Scryfall Tagger's tags for what the card does and the shape of the average deck. The page then builds each player's
+  taste from every deck they've logged (played more, won more and played lately count for more), along with their
+  colours, how popular or obscure their commanders are, their usual bracket, any Universes Beyond franchise and how
+  they win. Each pick is one of: **Plays like your …** (closest to one of their decks), **Hidden gem** (1,500 decks or
+  fewer on EDHREC), **Your first … deck** or **New colours** (the same idea in colours they haven't used), **New in
+  print** (first printed in the last six months), **Combo potential** (a known Commander Spellbook combo, for players
+  who win by combo or play combo decks), **On the rise** (new decks up 40% or more lately) and **Something different**
+  (a step sideways from their decks). Each says why, often naming cards both decks run, and mentions anyone else in
+  the pod who plays it. Commanders they've already played, Backgrounds and near-copies of their own commanders are
+  left out. Save adds a pick to the Discover shortlist. The page only loads `picks.json` when picks are on screen; if it
+  can't, the older picks from `commanders.tsv`'s theme letters and colours stand in.
 - **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
   each visit. Tap it for another. On 25 September 2026 Adam cut the list to the 68 lines he liked; the lines about the
   pod itself (the leader, win streaks, commander suggestions, holidays) and the jokes aimed at a named player went too.
