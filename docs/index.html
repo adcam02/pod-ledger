@@ -2520,7 +2520,7 @@ function applyCmdColours(ci) {
 /* ---------- the spotlight: whose commander the header art and the page's colours follow ---------- */
 /* It moves around so the page doesn't wear one deck's colours for months. On a game day (and the morning after) the
    latest winner has it. Otherwise each day takes the next of the pod's stories in turn: the standings leader, win
-   streaks, this month's best deck and top player, the latest win, the top decks, the best win rate, the fastest win and
+   streaks, new decks that are winning, this month's best deck and top player, the latest win, the top decks, the best win rate, the fastest win and
    each player's best deck. Everyone sees the same one on the same day; tapping the line under the pod's name shows the
    next one, for this visit only. */
 const SPOT_ICON = {
@@ -2562,6 +2562,21 @@ function spotlights() {
       const g = newest.find((x) => x.winner != null && norm(x.seats[x.winner].player) === p.key);
       if (g) add(g.seats[g.winner], SPOT_ICON.flame, "On fire", b(p.name) + " has won " + p.streak + " in a row, the last with " + esc(deckLabel(g.seats[g.winner])));
     });
+    // Up and coming: decks first played in the last 60 days that already win at least half their games. In the ledger's
+    // first three weeks every deck is new, so those don't count.
+    const firstSeen = new Map();
+    newest.slice().reverse().forEach((g) => g.seats.forEach((s) => {
+      const k = norm(deckLabel(s));
+      if (s.commander && !firstSeen.has(k)) firstSeen.set(k, g.playedOn);
+    }));
+    const start = parseISO(newest[newest.length - 1].playedOn);
+    const cutoff = start ? [isoDaysAgo(60), isoOf(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 21))].sort()[1] : isoDaysAgo(60);
+    st.cmds.filter((c) => c.commander && c.wins >= 2 && c.wins * 2 >= c.played && (firstSeen.get(norm(deckLabel(c))) || "") >= cutoff)
+      .sort((x, y) => y.wins - x.wins || y.wins / y.played - x.wins / x.played).slice(0, 2).forEach((c) => {
+        const pilot = c.pilots.size === 1 ? Array.from(c.pilots.values())[0] : "";
+        const rec = c.wins === c.played ? "unbeaten in " + plural(c.played, "game") : c.wins + " wins from " + plural(c.played, "game");
+        add(c, SPOT_ICON.rise, "Up and coming", pilot ? b(pilot) + "’s new " + esc(deckLabel(c)) + " deck: " + rec : b(deckLabel(c)) + " is new to the pod: " + rec);
+      });
     const mk = monthKey(now);
     const month = games.filter((g) => (g.playedOn || "").slice(0, 7) === mk);
     if (month.length >= 3) {

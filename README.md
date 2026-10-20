@@ -172,13 +172,15 @@ web apps. Use a personal Google account instead.
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the spotlight
   commander.
 - **The spotlight:** the line under the pod's name (a tag in the spotlight's colours, such as Just won, Leader, On fire
-  or Top deck, then the story), and the commander whose art and colours the page wears. Until
-  20 October 2026 it was always the all-time leader's main deck; now it moves around (`spotlights` in the page's
-  script). On a game day, and the morning after, the latest winner has it ("Just won: …"). Otherwise each day takes the
-  next of the pod's stories in turn: the standings leader, anyone on a win streak of 2 or more, the deck of the month and
-  the month's top player (once the month has 3 games), the latest win, the three decks with the most wins, the best win
-  rate (4 or more games), the fastest win and each player's best deck (2 or more wins). A deck only appears once, and
-  everyone sees the same spotlight on the same day. Tapping the line shows the next one, for that visit only.
+  or Up and coming, then the story), and the commander whose art and colours the page wears. Until 20 October 2026 it
+  was always the all-time leader's main deck; now it moves around (`spotlights` in the page's script). On a game day,
+  and the morning after, the latest winner has it ("Just won: …"). Otherwise each day takes the next of the pod's
+  stories in turn: the standings leader, anyone on a win streak of 2 or more, up and coming decks (first played in the
+  last 60 days, and after the ledger's first three weeks, with 2 or more wins and at least half their games won), the
+  deck of the month and the month's top player (once the month has 3 games), the latest win, the three decks with the
+  most wins, the best win rate (4 or more games), the fastest win and each player's best deck (2 or more wins). A deck
+  only appears once, and everyone sees the same spotlight on the same day. Tapping the line shows the next one, for
+  that visit only.
 - **Commander colours:** the gradients, glows and background tint follow the colour identity of the spotlight
   commander (`applyCmdColours`, with the shades in `MANA_TONES` and the printed colour order in `CI_ORDER`). One
   colour blends light to deep, two blend first to second, and with three the first two blend and the third is the
