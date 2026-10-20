@@ -91,6 +91,14 @@ web apps. Use a personal Google account instead.
   column, stored by name) and each player's mulligans (0 to 4+). Mulligans live in 8 columns after the knockout columns
   ("P1 mulligans" to "P8 mulligans"), added on the first save after the feature arrived; blank means not logged, 0 means
   they kept their first seven. Stats has "Going first" and "Mulligans" panels, and player pages an "Openings" panel.
+- **Game timer:** the card at the top of the log form. Start it when the game begins; Pause and Keep going are there if
+  the game stops for a while. "Stop and fill in the length" puts the minutes in Extras → Length in minutes (rounded to
+  the nearest minute, and anything under half a minute counts as a slip). While it's going, a "Game timer" pill shows on
+  every other page (above the bottom bar on phones) and opens the form. It keeps the time it started rather than
+  counting, so it stays right if the phone sleeps or the page is closed, and it's kept on that phone only
+  (`podLedger.timer.v1`), separate from the draft, so Clear form doesn't lose it. If someone saves without stopping it,
+  the game still gets the timer's length (unless a length was typed in), and saving a game with the timer's length
+  resets it for the next game. It's hidden when editing an older game.
 - **Group generator:** pick how many people, choose each person (or a guest), and it splits them into groups. With
   **Mix it up** ticked it splits up whoever has shared the most tables in the logged games (every game together counts,
   recent ones most: a game four weeks ago counts half); unticked, it's a plain random draw. The rematch and even-tables

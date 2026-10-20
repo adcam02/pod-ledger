@@ -1017,6 +1017,40 @@ select.in.first-pick { max-width: 20rem; }
 .pending-note p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 .pending .gcard { opacity: .82; }
 .gc-wait { margin-right: auto; align-self: center; color: var(--muted); font-size: 13.5px; font-weight: 700; }
+/* ---------- Game timer: at the top of the log form, and a pill on every other page while it's going ---------- */
+.gtimer {
+  display: grid; gap: 14px; padding: 18px 20px 20px; border-radius: 18px; border: 2px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad, linear-gradient(90deg, var(--mythic), var(--mythic))) border-box;
+  box-shadow: 0 12px 30px -16px rgba(var(--glow, 242, 138, 69), .6), var(--shadow);
+}
+.gt-head { display: flex; align-items: center; gap: 12px; }
+.gt-badge { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; background: var(--grad-sm, var(--mythic)); color: #fff; }
+.gt-badge .icon { width: 27px; height: 27px; }
+.gt-title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.15; }
+.gt-sub { margin: 2px 0 0; color: var(--ink-2); font-size: 14.5px; }
+.gt-face { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.gt-clock { font-family: var(--font-display); font-size: clamp(46px, 14vw, 64px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.gtimer.is-idle .gt-clock { color: var(--muted); }
+.gt-state { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.gt-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #F0443A; }
+.is-running .gt-dot { animation: gt-blink 1.2s ease-in-out infinite; }
+@keyframes gt-blink { 50% { opacity: .25; } }
+.gt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.gt-actions .btn-lg { flex: 1 1 240px; }
+.gt-done { flex-basis: 100%; margin: 0; font-weight: 600; color: var(--ink-2); }
+.gt-mins-note { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 500; color: var(--muted); }
+.just-filled { animation: gt-filled 2.6s ease-out; }
+@keyframes gt-filled { 0%, 45% { box-shadow: 0 0 0 3px rgba(var(--glow, 242, 138, 69), .6); } 100% { box-shadow: 0 0 0 3px transparent; } }
+.gt-pill {
+  position: fixed; z-index: 45; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  display: inline-flex; align-items: center; gap: 10px; min-height: 50px; padding: 6px 7px 6px 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--surface); font: inherit; font-size: 15px; font-weight: 700; white-space: nowrap;
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .5);
+}
+.gt-pill-time { font-family: var(--font-display); font-size: 21px; font-variant-numeric: tabular-nums; }
+.gt-pill-go { padding: 7px 13px; border-radius: 999px; background: var(--grad-sm, var(--mythic)); color: #fff; font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .is-running .gt-dot, .just-filled { animation: none; } }
+
 /* ---------- Phones: the sections in a bar along the bottom (wider screens keep the tabs at the top) ---------- */
 .botnav { display: none; }
 .theme-btn-top { display: none; }
@@ -1034,6 +1068,9 @@ select.in.first-pick { max-width: 20rem; }
   main { padding-bottom: 24px; }
   .page-foot { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
   .toast { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .gt-pill { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
+  body.timing .toast { bottom: calc(142px + env(safe-area-inset-bottom, 0px)); }
+  body.timing .page-foot { padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px)); }
 }
 .bn-item {
   appearance: none; display: grid; justify-items: center; gap: 2px; min-height: 54px; padding: 7px 0 5px; border: 0; background: none; cursor: pointer;
@@ -1643,6 +1680,15 @@ select.in.first-pick { max-width: 20rem; }
       <button type="button" class="link" id="cancelLog">Cancel</button>
     </div>
     <form class="logform" id="logForm" novalidate autocomplete="off">
+      <section class="gtimer is-idle" id="gameTimer" aria-labelledby="gtTitle">
+        <div class="gt-head">
+          <span class="gt-badge" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.8M9.5 3h5M12 3v3M18.2 7.3l1.6-1.6"/></svg></span>
+          <div><h3 class="gt-title" id="gtTitle">Game timer</h3><p class="gt-sub">Start it when the game begins and stop it when it ends. The length fills itself in.</p></div>
+        </div>
+        <div class="gt-face"><span class="gt-clock" id="gtClock" role="timer" aria-labelledby="gtTitle">0:00</span><span class="gt-state" id="gtState"></span></div>
+        <div class="gt-actions" id="gtActions"></div>
+      </section>
+
       <div class="field-row">
         <label class="field"><span>Date played</span><input class="in" type="date" id="f-date" required></label>
         <label class="field"><span>Ended on turn</span><input class="in" id="f-turn" inputmode="numeric" maxlength="2" placeholder="e.g. 9"></label>
@@ -1692,7 +1738,7 @@ select.in.first-pick { max-width: 20rem; }
         <legend>Extras <span class="opt">optional</span></legend>
         <div class="field-row">
           <label class="field"><span>Card of the game</span><input class="in" id="f-key" maxlength="80" placeholder="e.g. Cyclonic Rift"></label>
-          <label class="field"><span>Length in minutes</span><input class="in" id="f-mins" inputmode="numeric" maxlength="4" placeholder="e.g. 90"></label>
+          <label class="field"><span>Length in minutes</span><input class="in" id="f-mins" inputmode="numeric" maxlength="4" placeholder="e.g. 90"><span class="gt-mins-note" id="minsNote" hidden></span></label>
         </div>
         <label class="field"><span>Game summary</span><textarea class="in" id="f-notes" rows="4" maxlength="1200" placeholder="The story of the game. It shows on the game card as flavour text."></textarea></label>
         <div class="field">
@@ -1741,6 +1787,7 @@ select.in.first-pick { max-width: 20rem; }
   <div class="cd-body">
     <h2 id="newsTitle">What’s new</h2>
     <ul class="news-list">
+      <li><b>A game timer</b> at the top of Log a game: start it when the game begins, stop it at the end and the length fills itself in</li>
       <li><b>Discover is back</b>, in the bar along the bottom on phones</li>
       <li><b>Roll a random commander</b>, with filters for colours, theme and popularity</li>
       <li><b>The commander quiz:</b> five quick questions, then three commanders picked for you</li>
@@ -1749,6 +1796,7 @@ select.in.first-pick { max-width: 20rem; }
     <div class="cd-actions"><button type="button" class="btn btn-mythic" id="newsDone">Got it</button></div>
   </div>
 </dialog>
+<button type="button" class="gt-pill" id="gtPill" hidden><span class="gt-dot" aria-hidden="true"></span><span id="gtPillLbl">Game timer</span><span class="gt-pill-time" id="gtPillTime">0:00</span><span class="gt-pill-go" aria-hidden="true">Open</span></button>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button type="button" class="toast-act" id="toastAct" hidden></button></div>
 <div class="viz-tip" id="vizTip" role="tooltip" hidden></div>
 
@@ -1797,6 +1845,10 @@ const COMBO_NAMES = {
 const DRAFT_KEY = "podLedger.draft.v1";
 const MAX_SEATS = 8;
 const ICON = {
+  stopwatch: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.8M9.5 3h5M12 3v3M18.2 7.3l1.6-1.6"/></svg>',
+  play: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>',
+  pause: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="3"/></svg>',
+  stop: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
   trophy: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.9 3.9M16 6h2.5a2.5 2.5 0 0 1-2.9 3.9"/><path d="M12 13v4M9 20h6M10 17h4"/></svg>',
   plus: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
   x: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -2348,6 +2400,7 @@ function render() {
   renderMasthead();
   renderBanner();
   renderTabs();
+  renderTimerPill();
   const loading = state.phase === "loading";
   $("#loading").hidden = !loading;
   if (loading) {
@@ -4910,6 +4963,118 @@ function openLog(game) {
   go("log");
 }
 
+/* ---------- the game timer ---------- */
+/* Started from the top of the log form when a game begins. It keeps the moment it started (plus any time from before a
+   pause) rather than counting, so it stays right while the phone sleeps or the page is closed and opened again. It lives
+   on this phone only, apart from the draft, so clearing the form doesn't lose it. Stopping it fills in the game length. */
+const TIMER_KEY = "podLedger.timer.v1";
+const TIMER_MAX = 2 * 864e5;
+const blankTimer = () => ({ start: 0, acc: 0, done: false });
+let gameTimer = loadTimer();
+let timerTick = 0;
+let timerSig = "";
+function loadTimer() {
+  try {
+    const t = JSON.parse(localStorage.getItem(TIMER_KEY) || "null");
+    if (!t || typeof t !== "object") return blankTimer();
+    const now = Date.now();
+    const start = +t.start > now - TIMER_MAX && +t.start <= now + 6e4 ? +t.start : 0;
+    const acc = +t.acc > 0 && +t.acc < TIMER_MAX ? +t.acc : 0;
+    return { start: start, acc: acc, done: !start && acc > 0 && !!t.done };
+  } catch (e) { return blankTimer(); }
+}
+function saveTimer() {
+  try {
+    if (gameTimer.start || gameTimer.acc) localStorage.setItem(TIMER_KEY, JSON.stringify(gameTimer));
+    else localStorage.removeItem(TIMER_KEY);
+  } catch (e) { /* storage blocked: it still works until the page closes */ }
+}
+const timerMs = () => gameTimer.acc + (gameTimer.start ? Math.max(0, Date.now() - gameTimer.start) : 0);
+const timerPhase = () => (gameTimer.start ? "running" : gameTimer.done ? "stopped" : gameTimer.acc ? "paused" : "idle");
+const timerMinutes = () => Math.min(1440, Math.max(1, Math.round(timerMs() / 6e4)));
+function clockText(ms) {
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return (h ? h + ":" + pad2(m) : String(m)) + ":" + pad2(s % 60);
+}
+/* Puts the timer's minutes in "Length in minutes" (anything under half a minute is taken for a slip of the finger). */
+function fillLengthFromTimer(announce) {
+  if (!draft || draft.editingId || timerMs() < 3e4) return false;
+  draft.minutes = String(timerMinutes());
+  markDirty();
+  const f = $("#f-mins");
+  f.value = draft.minutes;
+  f.classList.remove("just-filled");
+  void f.offsetWidth; // so the glow plays again
+  f.classList.add("just-filled");
+  if (announce) toast("Game length filled in: " + fmtMins(timerMinutes()));
+  return true;
+}
+function timerAction(act) {
+  if (act === "start") gameTimer = { start: Date.now(), acc: 0, done: false };
+  else if (act === "resume") gameTimer = { start: Date.now(), acc: timerMs(), done: false };
+  else if (act === "pause") gameTimer = { start: 0, acc: timerMs(), done: false };
+  else if (act === "stop") {
+    gameTimer = { start: 0, acc: timerMs(), done: true };
+    if (!fillLengthFromTimer(true)) { gameTimer = blankTimer(); toast("That was under a minute, so the length wasn't filled in."); }
+  } else if (act === "reset") gameTimer = blankTimer();
+  saveTimer();
+  renderTimer();
+  const next = $("#gtActions button");
+  if (next) next.focus({ preventScroll: true });
+}
+function timerBtn(act, cls, icon, label) {
+  return '<button type="button" class="btn ' + cls + '" data-timer="' + act + '">' + icon + label + "</button>";
+}
+/* The card at the top of the log form (hidden while editing an older game). */
+function renderTimer() {
+  const phase = timerPhase(), editing = !!(draft && draft.editingId);
+  const box = $("#gameTimer");
+  box.hidden = editing;
+  box.className = "gtimer is-" + phase;
+  $("#gtClock").textContent = clockText(timerMs());
+  const sig = phase + "|" + (phase === "stopped" ? timerMinutes() : "");
+  if (sig !== timerSig) {
+    timerSig = sig;
+    $("#gtState").innerHTML = phase === "running" ? '<span class="gt-dot" aria-hidden="true"></span>Running' : phase === "paused" ? "Paused" : phase === "stopped" ? "Stopped" : "";
+    $("#gtActions").innerHTML =
+      phase === "idle" ? timerBtn("start", "btn-mythic btn-lg", ICON.play, "Start the timer")
+      : phase === "running" ? timerBtn("stop", "btn-mythic btn-lg", ICON.stop, "Stop and fill in the length") + timerBtn("pause", "btn-quiet", ICON.pause, "Pause")
+      : phase === "paused" ? timerBtn("resume", "btn-mythic btn-lg", ICON.play, "Keep going") + timerBtn("stop", "btn-quiet", ICON.stop, "Stop and fill in the length")
+      : '<p class="gt-done">' + esc(fmtMins(timerMinutes())) + " is filled in as the game length below.</p>" +
+        timerBtn("resume", "btn-quiet", ICON.play, "Keep timing") + '<button type="button" class="link" data-timer="reset">Reset the timer</button>';
+  }
+  const note = $("#minsNote");
+  note.hidden = editing || (phase !== "running" && phase !== "paused");
+  note.textContent = "The game timer is " + (phase === "paused" ? "paused" : "going") + ". Stop it and this fills in.";
+  renderTimerPill();
+}
+/* Everywhere but the log form, a pill shows the timer while it's going (or paused) and opens the form. */
+function renderTimerPill() {
+  const phase = timerPhase();
+  const show = (phase === "running" || phase === "paused") && state.view !== "log";
+  const pill = $("#gtPill");
+  pill.hidden = !show;
+  document.body.classList.toggle("timing", show);
+  if (show) {
+    const t = clockText(timerMs());
+    pill.classList.toggle("is-running", phase === "running");
+    $("#gtPillLbl").textContent = phase === "running" ? "Game timer" : "Timer paused";
+    $("#gtPillTime").textContent = t;
+    pill.setAttribute("aria-label", "Game timer " + (phase === "running" ? "going" : "paused") + ", " + t + ". Open the game");
+  }
+  const want = phase === "running";
+  if (want && !timerTick) timerTick = setInterval(tickTimer, 500);
+  else if (!want && timerTick) { clearInterval(timerTick); timerTick = 0; }
+}
+function tickTimer() {
+  const t = clockText(timerMs());
+  if ($("#gtClock").textContent !== t) $("#gtClock").textContent = t;
+  if (!$("#gtPill").hidden && $("#gtPillTime").textContent !== t) {
+    $("#gtPillTime").textContent = t;
+    $("#gtPill").setAttribute("aria-label", "Game timer going, " + t + ". Open the game");
+  }
+}
+
 /* ---------- the log form ---------- */
 const blankSeat = () => ({ player: "", commander: "", partner: "", showPartner: false, won: false, first: false, guestMode: false, place: "", outBy: "", outHow: "", mulls: "" });
 /* A name for a new game made on the phone ("c" then letters and digits). The sheet keeps it, so sending the same game
@@ -5035,6 +5200,7 @@ function buildLogForm() {
   renderSeats();
   renderRegulars();
   syncEndingUI();
+  renderTimer();
   showErrors([], new Set());
   updateLogChrome();
 }
@@ -5274,6 +5440,8 @@ function buildGame() {
 async function saveGame(e) {
   e.preventDefault();
   closeTA();
+  if (!draft.editingId && !draft.minutes && timerPhase() !== "idle") fillLengthFromTimer(false);
+  const timed = !draft.editingId && timerPhase() !== "idle" && draft.minutes === String(timerMinutes());
   const v = validate();
   showErrors(v.errs, v.bad);
   if (v.errs.length) { $("#formErrors").scrollIntoView({ block: "center", behavior: reduceMotion() ? "auto" : "smooth" }); return; }
@@ -5286,6 +5454,7 @@ async function saveGame(e) {
   try {
     const res = await backend.save(game);
     if (!editing) clearSavedDraft();
+    if (timed) { gameTimer = blankTimer(); saveTimer(); }
     clearTimeout(draftTimer);
     draft = null;
     saving = false;
@@ -5300,6 +5469,7 @@ async function saveGame(e) {
       const kept = keepForLater(game);
       if (kept) {
         clearSavedDraft();
+        if (timed) { gameTimer = blankTimer(); saveTimer(); }
         clearTimeout(draftTimer);
         draft = null;
         toast(kept === "no-photo" ? "No signal. The game is kept on this phone (without the photo) and sends by itself later." : "No signal. The game is kept on this phone and sends by itself later.");
@@ -5623,6 +5793,9 @@ function bindEvents() {
     const star = t.closest("[data-star]");
     if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
+    const tm = t.closest("[data-timer]");
+    if (tm) { timerAction(tm.dataset.timer); return; }
+    if (t.closest("#gtPill")) { openLog(); return; }
     if (t.closest("#newsBtn")) { openNews(); return; }
     if (t.closest("#newsDone")) { closeNews(); return; }
     const rs = t.closest("[data-recap-share]");
