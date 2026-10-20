@@ -171,7 +171,8 @@ web apps. Use a personal Google account instead.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
   `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the spotlight
   commander.
-- **The spotlight:** the line under the pod's name, and the commander whose art and colours the page wears. Until
+- **The spotlight:** the line under the pod's name (a tag in the spotlight's colours, such as Just won, Leader, On fire
+  or Top deck, then the story), and the commander whose art and colours the page wears. Until
   20 October 2026 it was always the all-time leader's main deck; now it moves around (`spotlights` in the page's
   script). On a game day, and the morning after, the latest winner has it ("Just won: …"). Otherwise each day takes the
   next of the pod's stories in turn: the standings leader, anyone on a win streak of 2 or more, the deck of the month and

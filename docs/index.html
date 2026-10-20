@@ -1205,6 +1205,12 @@ select.in.first-pick { max-width: 20rem; }
 [data-look="arcade"] .hero-cap[hidden] { display: none; }
 [data-look="arcade"] .hero-cap .icon { width: 15px; height: 15px; flex: none; color: #FFC94D; }
 [data-look="arcade"] .hero-cap b { color: var(--ink); font-weight: 700; }
+/* The spotlight's tag, in the spotlight commander's own colours. */
+[data-look="arcade"] .spot-tag {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 6px; border-radius: 999px;
+  background: var(--grad-sm); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
+}
+[data-look="arcade"] .hero-cap .spot-tag .icon { width: 13px; height: 13px; color: #fff; }
 [data-look="arcade"] .splash {
   background: rgba(18, 14, 36, .8); border-color: rgba(255, 255, 255, .14);
   box-shadow: 0 0 26px rgba(var(--glow), .22), 4px 4px 0 rgba(0, 0, 0, .25);
@@ -2530,12 +2536,12 @@ function spotlights() {
   const sig = games.length + "|" + today + "|" + morning;
   if (spotCache && spotCache.games === games && spotCache.sig === sig) return spotCache;
   const list = [], seen = new Set();
-  const add = (seat, icon, html) => {
+  const add = (seat, icon, tag, html) => {
     if (!seat || !seat.commander) return;
     const k = norm(deckLabel(seat));
     if (seen.has(k)) return;
     seen.add(k);
-    list.push({ seat: seat, icon: icon, html: html });
+    list.push({ seat: seat, icon: icon, tag: tag, html: html });
   };
   const b = (s) => "<b>" + esc(s) + "</b>";
   const bestDeck = (p) => Array.from(p.cmds.values()).sort((x, y) => y.wins - x.wins || y.played - x.played)[0];
@@ -2546,40 +2552,43 @@ function spotlights() {
     const lastWin = newest.find((g) => g.winner != null);
     const lastSeat = lastWin && lastWin.seats[lastWin.winner];
     fresh = !!lastWin && (lastWin.playedOn === today || (morning && lastWin.playedOn === isoDaysAgo(1)));
-    if (fresh) add(lastSeat, SPOT_ICON.bolt, "Just won: " + b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)));
+    if (fresh) {
+      const run = (st.players.find((p) => p.key === norm(lastSeat.player)) || {}).streak || 0;
+      add(lastSeat, SPOT_ICON.bolt, "Just won", b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)) + (run >= 2 ? ", " + run + " in a row" : ""));
+    }
     const leader = sortPlayers(st.players, "wins").find((p) => p.wins > 0);
-    if (leader) add(leader.fav, ICON.trophy, b(leader.name) + " leads the standings with " + esc(deckLabel(leader.fav)));
+    if (leader) add(leader.fav, ICON.trophy, "Leader", b(leader.name) + " tops the standings with " + esc(deckLabel(leader.fav)));
     st.players.filter((p) => p.streak >= 2).sort((x, y) => y.streak - x.streak).forEach((p) => {
       const g = newest.find((x) => x.winner != null && norm(x.seats[x.winner].player) === p.key);
-      if (g) add(g.seats[g.winner], SPOT_ICON.flame, b(p.name) + " has won " + p.streak + " in a row, the last with " + esc(deckLabel(g.seats[g.winner])));
+      if (g) add(g.seats[g.winner], SPOT_ICON.flame, "On fire", b(p.name) + " has won " + p.streak + " in a row, the last with " + esc(deckLabel(g.seats[g.winner])));
     });
     const mk = monthKey(now);
     const month = games.filter((g) => (g.playedOn || "").slice(0, 7) === mk);
     if (month.length >= 3) {
       const ms = computeStats(month);
       const deck = sortDecks(ms.cmds.filter((c) => c.wins >= 2 && c.commander), "wins")[0];
-      if (deck) add(deck, SPOT_ICON.calendar, "Deck of the month: " + b(deckLabel(deck)) + ", " + plural(deck.wins, "win"));
+      if (deck) add(deck, SPOT_ICON.calendar, "Deck of the month", b(deckLabel(deck)) + ", " + plural(deck.wins, "win") + " in " + monthName(mk));
       const tops = sortPlayers(ms.players, "wins").filter((p) => p.wins >= 2);
       if (tops.length && (tops.length === 1 || tops[1].wins < tops[0].wins)) {
         const best = bestDeck(tops[0]);
-        add(best, SPOT_ICON.rise, b(tops[0].name) + " has the most wins in " + monthName(mk) + " (" + tops[0].wins + "), with " + esc(deckLabel(best)));
+        add(best, SPOT_ICON.rise, "Top of " + monthName(mk), b(tops[0].name) + " has the most wins this month (" + tops[0].wins + "), with " + esc(deckLabel(best)));
       }
     }
-    if (lastWin && !fresh) add(lastSeat, SPOT_ICON.bolt, "Latest win: " + b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)));
+    if (lastWin && !fresh) add(lastSeat, SPOT_ICON.bolt, "Latest win", b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)));
     sortDecks(st.cmds.filter((c) => c.wins >= 2 && c.commander), "wins").slice(0, 3).forEach((d, i) => {
-      add(d, ICON.star, i === 0 ? b(deckLabel(d)) + " has the most wins of any deck (" + d.wins + ")"
-        : b(deckLabel(d)) + " is one of the pod’s top decks, with " + plural(d.wins, "win"));
+      add(d, ICON.star, "Top deck", i === 0 ? b(deckLabel(d)) + " has the most wins of any deck (" + d.wins + ")"
+        : b(deckLabel(d)) + ", " + plural(d.wins, "win") + " from " + plural(d.played, "game"));
     });
     const rate = st.cmds.filter((c) => c.commander && c.played >= 4 && c.wins / c.played >= 0.4)
       .sort((x, y) => y.wins / y.played - x.wins / x.played || y.played - x.played)[0];
-    if (rate) add(rate, SPOT_ICON.rise, b(deckLabel(rate)) + " wins most often: " + rate.wins + " of its " + rate.played + " games");
+    if (rate) add(rate, SPOT_ICON.rise, "Best win rate", b(deckLabel(rate)) + " has won " + rate.wins + " of its " + rate.played + " games");
     if (st.fastest) {
       const s = st.fastest.game.seats[st.fastest.game.winner];
-      add(s, SPOT_ICON.bolt, "Fastest win: " + b(s.player) + " on turn " + st.fastest.turn + " with " + esc(deckLabel(s)));
+      add(s, SPOT_ICON.bolt, "Fastest win", b(s.player) + " on turn " + st.fastest.turn + " with " + esc(deckLabel(s)));
     }
     sortPlayers(st.players, "wins").forEach((p) => {
       const best = bestDeck(p);
-      if (best && best.wins >= 2) add(best, ICON.star, b(p.name) + "’s best deck: " + esc(deckLabel(best)) + ", " + plural(best.wins, "win"));
+      if (best && best.wins >= 2) add(best, ICON.star, "Best deck", b(p.name) + " with " + esc(deckLabel(best)) + ", " + plural(best.wins, "win"));
     });
   }
   spotCache = { games: games, sig: sig, list: list, fresh: fresh };
@@ -2602,7 +2611,8 @@ function renderHero() {
   const k = norm(name);
   applyCmdColours(sample ? ciOfName(sample) || "" : seat ? ciForSeat(seat) : "");
   cap.hidden = !k;
-  cap.innerHTML = !k ? "" : sample ? ICON.trophy + "<span>Sample: <b>" + esc(sample) + "</b></span>" : spot.icon + "<span>" + spot.html + "</span>";
+  cap.innerHTML = !k ? "" : sample ? '<span class="spot-tag">' + ICON.trophy + "Sample</span><span><b>" + esc(sample) + "</b></span>"
+    : '<span class="spot-tag">' + spot.icon + esc(spot.tag) + "</span><span>" + spot.html + "</span>";
   if (!k) { box.innerHTML = ""; box.dataset.k = ""; return; }
   if (box.dataset.k === k && box.firstChild) return;
   box.dataset.k = k;
