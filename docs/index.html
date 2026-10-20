@@ -2639,7 +2639,9 @@ function renderHero() {
 
 function renderBanner() {
   const b = $("#banner");
-  const html = state.phase === "live" && state.refreshError
+  const html = updateReady
+    ? '<p><b>A new version of the ledger is ready.</b> Reload to get it.</p><button type="button" class="btn btn-mythic" data-reload>Reload</button>'
+    : state.phase === "live" && state.refreshError
     ? '<p class="banner-note">Couldn\'t refresh the ledger just now. It will try again shortly.</p>' : "";
   b.innerHTML = html;
   b.hidden = !html;
@@ -5360,6 +5362,22 @@ function closeNews() {
   if (typeof d.close === "function" && d.open) d.close(); else d.removeAttribute("open");
 }
 
+/* ---------- a newer version on the site ---------- */
+/* The build stamps the page and writes the same stamp to version.json next to it. When the app comes back to the front
+   (at most every ten minutes) it checks that file, and if the site has moved on, a banner offers to reload. Otherwise a
+   phone that keeps the app open for days, or resumes it from the home screen, could go on showing the old page. */
+const BUILD = "8d16ff3d21";
+let updateReady = false;
+let versionCheckedAt = 0;
+function checkForUpdate() {
+  if (!BUILD || updateReady || !/^https?:$/.test(location.protocol) || Date.now() - versionCheckedAt < 10 * 60000) return;
+  versionCheckedAt = Date.now();
+  fetch("version.json", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((v) => { if (v && v.build && v.build !== BUILD) { updateReady = true; renderBanner(); } })
+    .catch(() => { /* no signal: try again next time */ });
+}
+
 /* ---------- opening without signal ---------- */
 /* A service worker keeps the page and its pictures on the phone (see sw.js). Only on the real site: the local preview
    stays uncached unless ?sw=1 asks for it, and ?nosw takes it off again. */
@@ -6241,6 +6259,7 @@ function bindEvents() {
     const star = t.closest("[data-star]");
     if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
+    if (t.closest("[data-reload]")) { location.reload(); return; }
     if (t.closest("#heroCap")) { state.spotShift++; renderHero(); return; }
     const tm = t.closest("[data-timer]");
     if (tm) { timerAction(tm.dataset.timer); return; }
@@ -6711,8 +6730,9 @@ function start() {
   render();
   if (backend.ok) {
     refresh();
-    setInterval(() => { if (document.visibilityState === "visible") refresh(); }, 60000);
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refresh(); });
+    setInterval(() => { if (document.visibilityState === "visible") { refresh(); checkForUpdate(); } }, 60000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { refresh(); checkForUpdate(); } });
+    setTimeout(checkForUpdate, 4000);
   }
   if (fromHash === "log") openLog();
   setUpOffline();

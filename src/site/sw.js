@@ -36,7 +36,8 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin === self.location.origin) {
     if (req.mode === "navigate") e.respondWith(page(req, url));
-    else if (url.pathname !== new URL("sw.js", self.location).pathname) e.respondWith(kept(req, ASSET_CACHE, false));
+    // version.json says which build is on the site, so it always comes from the network.
+    else if (url.pathname !== new URL("sw.js", self.location).pathname && !url.pathname.endsWith("/version.json")) e.respondWith(kept(req, ASSET_CACHE, false));
     return;
   }
   if (ASSET_HOSTS.indexOf(url.hostname) >= 0) e.respondWith(kept(req, ASSET_CACHE, true));
@@ -47,7 +48,11 @@ self.addEventListener("fetch", (e) => {
 async function page(req, url) {
   const cache = await caches.open(PAGE_CACHE);
   const key = url.origin + url.pathname; // the same page whatever ?query it was opened with
-  const fresh = fetch(req).then((res) => {
+  // Ask GitHub whether the page has changed rather than taking the browser's own copy (good for ten minutes), so an
+  // update shows the next time the app opens. Older browsers that won't copy a page request just ask the usual way.
+  let ask = req;
+  try { ask = new Request(req, { cache: "no-cache" }); } catch (err) { /* keep req */ }
+  const fresh = fetch(ask).then((res) => {
     if (res && res.ok && res.type === "basic" && !res.redirected) cache.put(key, res.clone());
     return res;
   });

@@ -20,6 +20,7 @@ import shutil
 ROOT = pathlib.Path(__file__).resolve().parent
 MARKER = '/*__COMMANDERS__*/""'
 PICKS_MARKER = '/*__PICKS__*/""'
+BUILD_MARKER = '/*__BUILD__*/""'
 APP_SCRIPT_START = "<script>\n(function () {"
 LINK = re.compile(r'const LEDGER_LINK = "(https://[^"]+)";')
 # Preview only: stand in a commander as the leader (to try the banner art and colours it brings), and pretend the
@@ -89,12 +90,20 @@ def main():
     if page.count(PICKS_MARKER) != 1:
         raise SystemExit("The template must contain the picks marker exactly once.")
     page = page.replace(PICKS_MARKER, json.dumps(version))
+    # A stamp for this build, in the page and in version.json beside it: the page compares the two to offer a reload
+    # when the site has a newer version than the one on the screen.
+    if page.count(BUILD_MARKER) != 1:
+        raise SystemExit("The template must contain the build marker exactly once.")
+    build = hashlib.sha1(page.encode("utf-8")).hexdigest()[:10]
+    page = page.replace(BUILD_MARKER, json.dumps(build))
+    stamp = json.dumps({"build": build})
 
     docs = ROOT / "docs"
     docs.mkdir(exist_ok=True)
     (docs / "index.html").write_text(page, encoding="utf-8")
     (docs / ".nojekyll").write_text("", encoding="utf-8")
     copy_site(docs)
+    (docs / "version.json").write_text(stamp, encoding="utf-8")
     if version:
         shutil.copyfile(picks, docs / "picks.json")
 
@@ -118,6 +127,7 @@ def main():
     preview = preview.replace("</body>", SAMPLE_PICKER + "</body>", 1)
     (ROOT / "dev" / "preview.html").write_text(preview, encoding="utf-8")
     copy_site(ROOT / "dev")
+    (ROOT / "dev" / "version.json").write_text(stamp, encoding="utf-8")
     if version:
         shutil.copyfile(picks, ROOT / "dev" / "picks.json")
 

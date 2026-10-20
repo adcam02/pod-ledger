@@ -176,11 +176,16 @@ web apps. Use a personal Google account instead.
 - **What's new:** a small list of recent changes opens once on each device, then again whenever the list changes (its
   version is worked out from its own words, stored per browser as `podLedger.news`). "What's new" in the footer opens it.
 - **No signal:** on the real site a service worker (`sw.js`) keeps the page, fonts, mana symbols and card art on the
-  phone. The page comes from the network when there is a connection and from the saved copy after four seconds or
-  with none. A new game logged with no signal is kept on the phone (`podLedger.outbox.v1`), shown at the top of Games
+  phone. The page comes from the network when there is a connection (always asking GitHub whether it has changed,
+  rather than trusting the browser's own copy) and from the saved copy after four seconds or with none. A new game logged with no signal is kept on the phone (`podLedger.outbox.v1`), shown at the top of Games
   as "waiting to send", and sent by itself when a connection is back. The page names each new game itself, so a game
   sent twice is saved once (needs server version 15). Opening the site with `?nosw` removes the service worker from
   that browser.
+- **Updates:** each build stamps the page and writes the same stamp to `docs/version.json`. When the app comes back to
+  the front (at most every ten minutes) it checks that file, and if the site has a newer build, a banner says "A new
+  version of the ledger is ready" with a Reload button. Phones that keep the app open for days, or resume it from the
+  home screen, see an update that way. Added on 20 October 2026; phones still on an older page need closing and
+  reopening once to get it.
 - **Player colours:** the eight colours the charts give the regulars stay apart for every pair of players, including
   for colour-blind eyes, in light and dark (checked with the data-viz palette validator across all pairs).
 - **Games search:** the Games tab has a search box (players, commanders, partners, key cards, how it was won and the
