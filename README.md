@@ -169,10 +169,17 @@ web apps. Use a personal Google account instead.
   (`@fontsource/opendyslexic@5.3.0`) and only downloads once someone turns the switch on. It isn't remembered: every
   visit starts with the normal font, and the switch only changes the page for the person who pressed it.
 - **The look** ("Arcade": gradient titles, frosted glass panels) is switched on by `data-look="arcade"` on the page's
-  `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the main commander
-  of whoever leads the standings.
-- **Commander colours:** the gradients, glows and background tint follow the colour identity of the all-time leader's
-  main commander (`applyCmdColours`, with the shades in `MANA_TONES` and the printed colour order in `CI_ORDER`). One
+  `<html>` tag, and its styles are grouped at the end of the page's CSS. The art behind the header is the spotlight
+  commander.
+- **The spotlight:** the line under the pod's name, and the commander whose art and colours the page wears. Until
+  20 October 2026 it was always the all-time leader's main deck; now it moves around (`spotlights` in the page's
+  script). On a game day, and the morning after, the latest winner has it ("Just won: …"). Otherwise each day takes the
+  next of the pod's stories in turn: the standings leader, anyone on a win streak of 2 or more, the deck of the month and
+  the month's top player (once the month has 3 games), the latest win, the three decks with the most wins, the best win
+  rate (4 or more games), the fastest win and each player's best deck (2 or more wins). A deck only appears once, and
+  everyone sees the same spotlight on the same day. Tapping the line shows the next one, for that visit only.
+- **Commander colours:** the gradients, glows and background tint follow the colour identity of the spotlight
+  commander (`applyCmdColours`, with the shades in `MANA_TONES` and the printed colour order in `CI_ORDER`). One
   colour blends light to deep, two blend first to second, and with three the first two blend and the third is the
   accent. Four or five colours, and colourless, keep the usual pink, violet and blue. White shows as gold and black as a
   smoky violet so both stand out. In the local preview, the "Preview leader" picker in the corner tries other

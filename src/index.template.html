@@ -1200,6 +1200,8 @@ select.in.first-pick { max-width: 20rem; }
   background: var(--glass); border: 1px solid var(--glass-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   font-size: 13.5px; font-weight: 600; color: var(--ink-2);
 }
+[data-look="arcade"] .hero-cap { appearance: none; font-family: inherit; line-height: 1.3; text-align: left; cursor: pointer; }
+[data-look="arcade"] .hero-cap:hover { border-color: var(--line-strong); color: var(--ink); }
 [data-look="arcade"] .hero-cap[hidden] { display: none; }
 [data-look="arcade"] .hero-cap .icon { width: 15px; height: 15px; flex: none; color: #FFC94D; }
 [data-look="arcade"] .hero-cap b { color: var(--ink); font-weight: 700; }
@@ -1308,7 +1310,7 @@ select.in.first-pick { max-width: 20rem; }
       <button type="button" class="link" id="renameCancel">Cancel</button>
     </form>
     <p class="masthead-sub" id="mastheadSub">Loading games…</p>
-    <p class="hero-cap" id="heroCap" hidden></p>
+    <button type="button" class="hero-cap" id="heroCap" title="Tap for another" hidden></button>
   </div>
   <button type="button" class="splash" id="splash" title="Tap for another message" aria-live="polite">Shuffle up and deal!</button>
 </header>
@@ -1788,6 +1790,7 @@ select.in.first-pick { max-width: 20rem; }
     <h2 id="newsTitle">What’s new</h2>
     <ul class="news-list">
       <li><b>A game timer</b> at the top of Log a game: start it when the game begins, stop it at the end and the length fills itself in</li>
+      <li><b>The colours change:</b> each day the page takes on a different deck that’s doing well, and on game night it’s the latest winner’s. Tap the line under the pod’s name for another.</li>
       <li><b>Discover is back</b>, in the bar along the bottom on phones</li>
       <li><b>Roll a random commander</b>, with filters for colours, theme and popularity</li>
       <li><b>The commander quiz:</b> five quick questions, then three commanders picked for you</li>
@@ -2119,6 +2122,7 @@ const state = {
   gamesQuery: "",
   gamesHow: "",
   recapMonth: "",
+  spotShift: 0,
   plPicks: 0,
   stale: false,
   expanded: new Set(),
@@ -2442,7 +2446,6 @@ function renderMasthead() {
   $("#renameBtn").hidden = !canSave() || !$("#renameForm").hidden;
   renderHero();
 }
-/* The commander of whoever tops the standings (the deck under their name), faded behind the header. */
 /* ---------- colours from the leading commander ---------- */
 /* Each colour pair and triple in the order cards print it (Bant is green, white, blue), so the card's first colour
    leads the blend. Four and five colours, and colourless, keep the usual pink, violet and blue. */
@@ -2508,20 +2511,98 @@ function applyCmdColours(ci) {
   root.setAttribute("data-cmd", order);
 }
 
+/* ---------- the spotlight: whose commander the header art and the page's colours follow ---------- */
+/* It moves around so the page doesn't wear one deck's colours for months. On a game day (and the morning after) the
+   latest winner has it. Otherwise each day takes the next of the pod's stories in turn: the standings leader, win
+   streaks, this month's best deck and top player, the latest win, the top decks, the best win rate, the fastest win and
+   each player's best deck. Everyone sees the same one on the same day; tapping the line under the pod's name shows the
+   next one, for this visit only. */
+const SPOT_ICON = {
+  flame: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 3.3 4.8 5.2 4.8 9.8a4.8 4.8 0 0 1-9.6 0c0-2.1 1-3.6 2.1-4.5.2 1.7 1 2.7 2.1 2.9C10.9 8.6 11.2 5.7 12 3Z"/></svg>',
+  calendar: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>',
+  bolt: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5.5 13.5H12L11 21l7.5-10.5H12L13 3Z"/></svg>',
+  rise: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="m5 15 4.5-4.5 3.5 3.5L19 8"/><path d="M15 8h4v4"/></svg>',
+};
+let spotCache = null;
+function spotlights() {
+  const games = state.phase === "live" ? currentGames() : [];
+  const now = new Date(), today = todayISO(), morning = now.getHours() < 12;
+  const sig = games.length + "|" + today + "|" + morning;
+  if (spotCache && spotCache.games === games && spotCache.sig === sig) return spotCache;
+  const list = [], seen = new Set();
+  const add = (seat, icon, html) => {
+    if (!seat || !seat.commander) return;
+    const k = norm(deckLabel(seat));
+    if (seen.has(k)) return;
+    seen.add(k);
+    list.push({ seat: seat, icon: icon, html: html });
+  };
+  const b = (s) => "<b>" + esc(s) + "</b>";
+  const bestDeck = (p) => Array.from(p.cmds.values()).sort((x, y) => y.wins - x.wins || y.played - x.played)[0];
+  let fresh = false;
+  if (games.length) {
+    const st = computeStats(games);
+    const newest = games.slice().sort(byNewest);
+    const lastWin = newest.find((g) => g.winner != null);
+    const lastSeat = lastWin && lastWin.seats[lastWin.winner];
+    fresh = !!lastWin && (lastWin.playedOn === today || (morning && lastWin.playedOn === isoDaysAgo(1)));
+    if (fresh) add(lastSeat, SPOT_ICON.bolt, "Just won: " + b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)));
+    const leader = sortPlayers(st.players, "wins").find((p) => p.wins > 0);
+    if (leader) add(leader.fav, ICON.trophy, b(leader.name) + " leads the standings with " + esc(deckLabel(leader.fav)));
+    st.players.filter((p) => p.streak >= 2).sort((x, y) => y.streak - x.streak).forEach((p) => {
+      const g = newest.find((x) => x.winner != null && norm(x.seats[x.winner].player) === p.key);
+      if (g) add(g.seats[g.winner], SPOT_ICON.flame, b(p.name) + " has won " + p.streak + " in a row, the last with " + esc(deckLabel(g.seats[g.winner])));
+    });
+    const mk = monthKey(now);
+    const month = games.filter((g) => (g.playedOn || "").slice(0, 7) === mk);
+    if (month.length >= 3) {
+      const ms = computeStats(month);
+      const deck = sortDecks(ms.cmds.filter((c) => c.wins >= 2 && c.commander), "wins")[0];
+      if (deck) add(deck, SPOT_ICON.calendar, "Deck of the month: " + b(deckLabel(deck)) + ", " + plural(deck.wins, "win"));
+      const tops = sortPlayers(ms.players, "wins").filter((p) => p.wins >= 2);
+      if (tops.length && (tops.length === 1 || tops[1].wins < tops[0].wins)) {
+        const best = bestDeck(tops[0]);
+        add(best, SPOT_ICON.rise, b(tops[0].name) + " has the most wins in " + monthName(mk) + " (" + tops[0].wins + "), with " + esc(deckLabel(best)));
+      }
+    }
+    if (lastWin && !fresh) add(lastSeat, SPOT_ICON.bolt, "Latest win: " + b(lastSeat.player) + " with " + esc(deckLabel(lastSeat)));
+    sortDecks(st.cmds.filter((c) => c.wins >= 2 && c.commander), "wins").slice(0, 3).forEach((d, i) => {
+      add(d, ICON.star, i === 0 ? b(deckLabel(d)) + " has the most wins of any deck (" + d.wins + ")"
+        : b(deckLabel(d)) + " is one of the pod’s top decks, with " + plural(d.wins, "win"));
+    });
+    const rate = st.cmds.filter((c) => c.commander && c.played >= 4 && c.wins / c.played >= 0.4)
+      .sort((x, y) => y.wins / y.played - x.wins / x.played || y.played - x.played)[0];
+    if (rate) add(rate, SPOT_ICON.rise, b(deckLabel(rate)) + " wins most often: " + rate.wins + " of its " + rate.played + " games");
+    if (st.fastest) {
+      const s = st.fastest.game.seats[st.fastest.game.winner];
+      add(s, SPOT_ICON.bolt, "Fastest win: " + b(s.player) + " on turn " + st.fastest.turn + " with " + esc(deckLabel(s)));
+    }
+    sortPlayers(st.players, "wins").forEach((p) => {
+      const best = bestDeck(p);
+      if (best && best.wins >= 2) add(best, ICON.star, b(p.name) + "’s best deck: " + esc(deckLabel(best)) + ", " + plural(best.wins, "win"));
+    });
+  }
+  spotCache = { games: games, sig: sig, list: list, fresh: fresh };
+  return spotCache;
+}
+/* Today's spotlight, moved along by any taps on the line under the pod's name. */
+function currentSpot() {
+  const s = spotlights();
+  if (!s.list.length) return null;
+  const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+  return s.list[((s.fresh ? 0 : day % s.list.length) + state.spotShift) % s.list.length];
+}
+/* The spotlight commander, faded behind the header, and its colours across the page. */
 function renderHero() {
   const box = $("#hero"), cap = $("#heroCap");
-  const games = state.phase === "live" ? periodGames(currentGames()) : [];
-  const leader = games.length ? sortPlayers(computeStats(games).players, "wins").find((p) => p.wins > 0) : null;
-  const deck = leader && leader.fav;
   const sample = window.__previewCommander || ""; // set only by the local preview's sample picker
-  const name = sample || (deck ? deck.commander : "");
+  const spot = sample ? null : currentSpot();
+  const seat = sample ? { commander: sample, partner: "" } : spot && spot.seat;
+  const name = seat ? seat.commander : "";
   const k = norm(name);
-  // The page's colours follow the all-time leader's main commander, so picking a period doesn't recolour everything.
-  const all = state.phase === "live" ? currentGames() : [];
-  const top = all.length ? sortPlayers(computeStats(all).players, "wins").find((p) => p.wins > 0) : null;
-  applyCmdColours(sample ? ciOfName(sample) || "" : top && top.fav ? ciForSeat(top.fav) : "");
+  applyCmdColours(sample ? ciOfName(sample) || "" : seat ? ciForSeat(seat) : "");
   cap.hidden = !k;
-  cap.innerHTML = !k ? "" : ICON.trophy + "<span>" + (sample ? "Sample: <b>" + esc(sample) + "</b>" : "<b>" + esc(leader.name) + "</b> leads with " + esc(deckLabel(deck))) + "</span>";
+  cap.innerHTML = !k ? "" : sample ? ICON.trophy + "<span>Sample: <b>" + esc(sample) + "</b></span>" : spot.icon + "<span>" + spot.html + "</span>";
   if (!k) { box.innerHTML = ""; box.dataset.k = ""; return; }
   if (box.dataset.k === k && box.firstChild) return;
   box.dataset.k = k;
@@ -5793,6 +5874,7 @@ function bindEvents() {
     const star = t.closest("[data-star]");
     if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
+    if (t.closest("#heroCap")) { state.spotShift++; renderHero(); return; }
     const tm = t.closest("[data-timer]");
     if (tm) { timerAction(tm.dataset.timer); return; }
     if (t.closest("#gtPill")) { openLog(); return; }
