@@ -103,13 +103,20 @@ web apps. Use a personal Google account instead.
   ends with the ledger link, which is the `LEDGER_LINK` constant near the top of the page's script. The build also
   puts that link on the moved page, so change it there if the site ever moves again.
 - **Sections:** Standings (the player standings, the rivalry of the month, then the Commanders list with its player
-  filter and sort), Games, Stats and the Group generator. On phones they sit in a bar along the bottom (Standings,
-  Games, a big + to log a game, Stats, Generator); wider screens show them as tabs along the top. Everything counts all
-  time: the period picker was taken out on 27 September 2026 at Adam's request, as was the Discover tab (random
-  commander, quiz and shortlist). Old links to `#commanders` or `#discover` open Standings.
+  filter and sort), Games, Stats, the Group generator and Discover. On phones they sit in a bar along the bottom
+  (Standings, Games, a big + to log a game, Stats, Groups, Discover); wider screens show them as tabs along the top.
+  Everything counts all time: the period picker was taken out on 27 September 2026 at Adam's request. Old links to
+  `#commanders` open Standings.
+- **Discover:** taken out on 27 September 2026 and brought back on 20 October 2026 at Adam's request. Four panels:
+  **Random commander** rolls any commander that can lead a deck, filtered by colours (with "Exactly these colours"),
+  theme and popularity, and shows the whole card with a "Rolled before" row; the **Commander quiz** asks five questions
+  (play style, colours, flavour, complexity, popularity) and names three commanders with a title like "Noble Swarm
+  Wrangler"; **Picks for a player** shows four commanders for anyone in the pod; and **Your shortlist** keeps every
+  commander someone has tapped **Save** on. Discover's state (the last roll, filters, quiz answers and shortlist) is kept
+  in each browser only (`podLedger.discover.v1`), so it's never shared or stored in the sheet.
 - **Commanders to try:** each player page suggests three commanders from the themes and colours of the decks they've
-  played; "Other picks" shows another three. The themes come from `tools/commanders.py`, which reads each card's rules
-  text, so they're a good guess, not gospel.
+  played; "Other picks" shows another three, and Save adds one to the Discover shortlist. The themes come from
+  `tools/commanders.py`, which reads each card's rules text, so they're a good guess, not gospel.
 - **Splash message:** the little yellow box by the pod name shows a random line from `SPLASHES` in the page's script on
   each visit. Tap it for another. On 25 September 2026 Adam cut the list to the 68 lines he liked; the lines about the
   pod itself (the leader, win streaks, commander suggestions, holidays) and the jokes aimed at a named player went too.

@@ -879,7 +879,54 @@ select.in.first-pick { max-width: 20rem; }
 @media (max-width: 480px) { .theme-btn .theme-lbl { display: none; } .theme-btn { padding: 0 9px; } }
 .tabbar-end { display: flex; align-items: center; gap: 10px; flex: none; }
 
-/* ---------- Commanders to try (player pages) ---------- */
+/* ---------- Discover ---------- */
+.disc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 900px) { .disc-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; } }
+.disc-grid > .panel { align-self: start; }
+.roll-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 16px; }
+.colour-toggles { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ctog {
+  appearance: none; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 0; font: 700 13px/1 var(--font-ui); color: var(--pip-ink); opacity: .5;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28);
+}
+.ctog:hover { opacity: .8; }
+.ctog[aria-pressed="true"] { opacity: 1; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28), 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.ctog.w { background: var(--pip-w); } .ctog.u { background: var(--pip-u); } .ctog.b { background: var(--pip-b); }
+.ctog.r { background: var(--pip-r); } .ctog.g { background: var(--pip-g); } .ctog.c { background: var(--pip-c); }
+.ctog .pip { width: 100%; height: 100%; font-size: inherit; box-shadow: none; }
+.roll-filters .check { min-height: 34px; font-size: 15px; }
+.roll-filters .check input:disabled + span { color: var(--muted); }
+.roll-stage { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 560px) { .roll-stage { grid-template-columns: minmax(0, 1fr); } .roll-stage .rc-img { width: min(100%, 250px); } }
+.rc-img {
+  position: relative; aspect-ratio: 488 / 680; border-radius: 4.75% / 3.4%; overflow: hidden;
+  background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+}
+.rc-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.rc-fallback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 18px; text-align: center; color: var(--muted); font-weight: 600; }
+.rc-big { font-size: 40px; line-height: 1; }
+.roll-stage.is-empty .rc-fallback { font-family: var(--font-display); font-size: 18px; color: var(--ink-2); }
+.rc-info { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.rc-name { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.rc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0; color: var(--ink-2); font-weight: 600; }
+.theme-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.theme-chips li { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.theme-chips li.vibe { border-color: transparent; background: var(--mythic-soft); color: var(--ink); }
+.rc-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 4px; }
+.roll-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 18px; }
+.roll-actions .count { margin: 0; }
+.roll-history { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.roll-history .chip-btn { font-size: 14px; min-height: 32px; border-style: solid; }
+.star {
+  appearance: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); font-size: 14px; font-weight: 600;
+}
+.star .icon { width: 15px; height: 15px; }
+.star:hover { border-color: var(--ink-2); color: var(--ink); }
+.star[aria-pressed="true"] { border-color: var(--mythic); background: var(--mythic-soft); color: var(--ink); }
+.star[aria-pressed="true"] .icon { fill: var(--mythic); stroke: var(--mythic); }
+/* ---------- Commander cards (Discover and player pages) ---------- */
 .cmdlets { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); }
 .cmdlet { display: grid; grid-template-rows: auto 1fr; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .cmdlet-art { display: flex; gap: 1px; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface-2); border-bottom: 1px solid var(--line); }
@@ -889,13 +936,41 @@ select.in.first-pick { max-width: 20rem; }
 .cmdlet-why { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 .cmdlet-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 2px; }
 .cmdlet-foot .link.small { padding-block: 4px; }
+.cmdlets.compact { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.cmdlets.compact .cmdlet { grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: none; }
+.cmdlets.compact .cmdlet-art { aspect-ratio: auto; min-height: 100%; border-bottom: 0; border-right: 1px solid var(--line); }
+.cmdlets.compact .cmdlet-art .art-credit { display: none; }
 @media (max-width: 560px) {
   .cmdlets { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .cmdlet { grid-template-columns: 104px minmax(0, 1fr); grid-template-rows: none; }
   .cmdlet-art { aspect-ratio: auto; min-height: 100%; border-bottom: 0; border-right: 1px solid var(--line); }
   .cmdlet-art .art-credit { display: none; }
 }
-@media (max-width: 420px) { .cmdlet { grid-template-columns: 88px minmax(0, 1fr); } }
+@media (max-width: 420px) { .cmdlets.compact .cmdlet, .cmdlet { grid-template-columns: 88px minmax(0, 1fr); } }
+.picks-head { flex-wrap: wrap; }
+.panel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 14px; }
+.quiz-intro { display: grid; gap: 10px; justify-items: start; }
+.quiz-intro p { margin: 0; color: var(--ink-2); }
+.quiz-intro .em-row { font-size: 30px; letter-spacing: 4px; line-height: 1.2; }
+.quiz-progress { display: flex; gap: 6px; margin-bottom: 14px; }
+.quiz-progress i { flex: 1; height: 5px; border-radius: 3px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.quiz-progress i.on { background: var(--mythic); box-shadow: none; }
+.quiz-q { margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 600; line-height: 1.2; }
+.quiz-hint { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.quiz-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)); gap: 8px; margin-top: 14px; }
+.qopt {
+  appearance: none; display: grid; justify-items: center; align-content: start; gap: 6px; padding: 12px 10px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink); text-align: center; font-size: 15px; font-weight: 600; line-height: 1.25;
+}
+.qopt .em { font-size: 28px; line-height: 1.1; }
+.qopt .pip { width: 30px; height: 30px; font-size: 14px; }
+.qopt:hover { border-color: var(--ink-2); }
+.qopt[aria-pressed="true"] { border-color: var(--mythic); background: var(--mythic-soft); box-shadow: inset 0 0 0 1px var(--mythic); }
+.quiz-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
+.quiz-result { display: grid; gap: 10px; }
+.quiz-result h4 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.15; }
+.quiz-blurb { margin: 0 0 4px; color: var(--ink-2); }
+.shortlist-note { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
 
 .share-text { font-size: 14.5px; line-height: 1.45; resize: none; }
 .photo-pick { display: grid; gap: 10px; justify-items: start; }
@@ -949,7 +1024,7 @@ select.in.first-pick { max-width: 20rem; }
   .tabbar { display: none; }
   .theme-btn-top { display: inline-flex; margin-left: auto; align-self: flex-start; }
   .botnav {
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: end;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     padding: 4px max(8px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
     background: color-mix(in oklab, var(--bg) 86%, transparent);
@@ -1116,7 +1191,7 @@ select.in.first-pick { max-width: 20rem; }
   content: ""; display: block; width: 56px; height: 3px; margin-top: 8px; border-radius: 2px;
   background: var(--grad); box-shadow: 0 0 12px rgba(var(--glow), .5);
 }
-[data-look="arcade"] :is(.kpi .v, .chart-head h3, .side-h, .tc-head h4) { font-family: var(--font-display); }
+[data-look="arcade"] :is(.kpi .v, .chart-head h3, .side-h, .tc-head h4, .rc-name, .quiz-result h4) { font-family: var(--font-display); }
 [data-look="arcade"] .kpi .v { background: linear-gradient(90deg, var(--ink) 40%, rgb(var(--soft))); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
 
 /* Frosted panels */
@@ -1139,13 +1214,13 @@ select.in.first-pick { max-width: 20rem; }
 /* Buttons, toggles and fields */
 [data-look="arcade"] .btn-mythic { background: var(--grad); color: #fff; border: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18), 0 10px 26px -8px rgba(var(--glow), .65); }
 [data-look="arcade"] .btn-mythic:hover { filter: brightness(1.08) saturate(1.1); }
-[data-look="arcade"] :is(.btn-quiet, .theme-btn, .chip-btn, .seg, .tog, .mull, .pick, .chip span) {
+[data-look="arcade"] :is(.btn-quiet, .theme-btn, .star, .chip-btn, .seg, .tog, .mull, .qopt, .pick, .chip span) {
   background-color: var(--glass); border-color: var(--glass-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 [data-look="arcade"] .seg { border-radius: 999px; }
 [data-look="arcade"] .seg button + button { border-left-color: var(--glass-line); }
 /* Small toggles use a tighter pink-to-violet fill: the full three-colour gradient looks blotchy squeezed into a small button. */
-[data-look="arcade"] :is(.seg button, .pick, .mull)[aria-pressed="true"], [data-look="arcade"] .chip input:checked + span, [data-look="arcade"] .tog-win[aria-pressed="true"] {
+[data-look="arcade"] :is(.seg button, .pick, .mull, .qopt)[aria-pressed="true"], [data-look="arcade"] .chip input:checked + span, [data-look="arcade"] .tog-win[aria-pressed="true"] {
   background: var(--grad-sm); border-color: transparent; color: #fff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 6px 16px -8px rgba(var(--glow), .75);
 }
@@ -1208,6 +1283,7 @@ select.in.first-pick { max-width: 20rem; }
       <button type="button" class="tab" data-go="games" aria-current="false">Games</button>
       <button type="button" class="tab" data-go="stats" aria-current="false">Stats</button>
       <button type="button" class="tab" data-go="tables" aria-current="false"><span class="lbl-long">Group generator</span><span class="lbl-short">Groups</span></button>
+      <button type="button" class="tab" data-go="discover" aria-current="false">Discover</button>
     </div>
     <div class="tabbar-end">
       <button type="button" class="theme-btn" id="themeBtn"></button>
@@ -1223,7 +1299,8 @@ select.in.first-pick { max-width: 20rem; }
   <button type="button" class="bn-item" data-go="games"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="11" height="13" rx="2"/><path d="M9 4h9a2 2 0 0 1 2 2v11"/></svg><span>Games</span></button>
   <button type="button" class="bn-log" data-go="log" aria-label="Log a game"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   <button type="button" class="bn-item" data-go="stats"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4M12 16V6M17 16V9"/></svg><span>Stats</span></button>
-  <button type="button" class="bn-item" data-go="tables" aria-label="Group generator"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="10" r="2.5"/><path d="M15.6 14.6a4.4 4.4 0 0 1 5.4 4.3"/></svg><span>Generator</span></button>
+  <button type="button" class="bn-item" data-go="tables" aria-label="Group generator"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="10" r="2.5"/><path d="M15.6 14.6a4.4 4.4 0 0 1 5.4 4.3"/></svg><span>Groups</span></button>
+  <button type="button" class="bn-item" data-go="discover"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z"/></svg><span>Discover</span></button>
 </nav>
 
 <div class="wrap"><div class="banner" id="banner" hidden></div></div>
@@ -1467,6 +1544,43 @@ select.in.first-pick { max-width: 20rem; }
     </div>
   </section>
 
+  <section class="view" id="view-discover" aria-labelledby="h-discover" hidden>
+    <div class="section-head"><div><h2 id="h-discover">Discover</h2><p class="count">Find your next commander: roll a random one, take the quiz, or see picks based on the decks you play.</p></div></div>
+    <div class="disc-grid">
+      <section class="panel" aria-labelledby="h-roll">
+        <div class="chart-head"><div><h3 id="h-roll">Random commander</h3><p class="chart-sub">Every legal commander, with filters if you want them</p></div></div>
+        <div class="roll-filters">
+          <div class="colour-toggles" role="group" aria-label="Colours" id="rollColours"></div>
+          <label class="check"><input type="checkbox" id="rollExact"><span>Exactly these colours</span></label>
+          <label class="field inline"><span class="lab">Theme</span><select id="rollTheme"></select></label>
+          <label class="field inline"><span class="lab">Popularity</span><select id="rollPop"></select></label>
+        </div>
+        <div id="rollOut" aria-live="polite"></div>
+        <div class="roll-actions">
+          <button type="button" class="btn btn-mythic btn-lg" id="rollBtn"></button>
+          <p class="count" id="rollPoolCount"></p>
+        </div>
+        <div class="roll-history" id="rollHistory" hidden></div>
+      </section>
+      <section class="panel" aria-labelledby="h-quiz">
+        <div class="chart-head"><div><h3 id="h-quiz">Commander quiz</h3><p class="chart-sub">What kind of deck would you love?</p></div></div>
+        <div id="quizBody" aria-live="polite"></div>
+      </section>
+      <section class="panel span-2" aria-labelledby="h-picks">
+        <div class="chart-head picks-head">
+          <div><h3 id="h-picks">Picks for a player</h3><p class="chart-sub">Commanders that share themes and colours with the decks they’ve played</p></div>
+          <label class="field inline"><span class="lab">Player</span><select id="picksFor"></select></label>
+        </div>
+        <div id="picksBody"></div>
+        <div class="panel-actions" id="picksActions"><button type="button" class="btn btn-quiet" id="picksShuffle">Show different picks</button></div>
+      </section>
+      <section class="panel span-2" aria-labelledby="h-shortlist">
+        <div class="chart-head"><div><h3 id="h-shortlist">Your shortlist</h3><p class="chart-sub">Commanders you’ve saved while browsing</p></div></div>
+        <div id="shortlistBody"></div>
+      </section>
+    </div>
+  </section>
+
   <section class="view" id="view-player" aria-labelledby="plName" hidden>
     <button type="button" class="link back" id="plBack">← Standings</button>
     <div class="section-head"><div><div class="eyebrow">Player</div><h2 id="plName"></h2><p class="count" id="plSub"></p></div></div>
@@ -1627,12 +1741,10 @@ select.in.first-pick { max-width: 20rem; }
   <div class="cd-body">
     <h2 id="newsTitle">What’s new</h2>
     <ul class="news-list">
-      <li><b>Commanders</b> are on the Standings page now</li>
-      <li><b>A bar along the bottom</b> on phones, with a big + to log a game</li>
-      <li><b>In Stats:</b> win rate over time, colours by month, and a month in review to share at the bottom</li>
-      <li><b>Search and filters</b> in Games</li>
-      <li><b>Clearer colours</b> for each player in the charts</li>
-      <li><b>Works without signal</b> once it’s on your home screen. A game logged with no signal sends itself later.</li>
+      <li><b>Discover is back</b>, in the bar along the bottom on phones</li>
+      <li><b>Roll a random commander</b>, with filters for colours, theme and popularity</li>
+      <li><b>The commander quiz:</b> five quick questions, then three commanders picked for you</li>
+      <li><b>Picks for each player</b> from the decks they’ve played, and <b>Save</b> on any commander to keep a shortlist</li>
     </ul>
     <div class="cd-actions"><button type="button" class="btn btn-mythic" id="newsDone">Got it</button></div>
   </div>
@@ -1648,8 +1760,8 @@ select.in.first-pick { max-width: 20rem; }
    (made by tools/commanders.py; the tags are explained in THEMES below). */
 const COMMANDER_TSV = /*__COMMANDERS__*/"";
 
-const VIEWS = ["standings", "games", "stats", "tables", "player", "log"];
-const VIEW_NAMES = { standings: "Standings", games: "Games", stats: "Stats", tables: "Group generator" };
+const VIEWS = ["standings", "games", "stats", "tables", "discover", "player", "log"];
+const VIEW_NAMES = { standings: "Standings", games: "Games", stats: "Stats", tables: "Group generator", discover: "Discover" };
 /* Where the ledger lives (used when sharing to the group chat), and the Apps Script that keeps the sheet.
    The page sends it requests; the old Apps Script link itself now shows a "we've moved" page. */
 const LEDGER_LINK = "https://adcam02.github.io/pod-ledger/";
@@ -1808,6 +1920,16 @@ function artState(name) {
   if (!artQueued.has(k)) { artQueued.add(k); artQueue.push({ name: name, k: k }); pumpArt(); }
   return "pending";
 }
+/* The whole card picture, for Discover. Same lookup as the art, jumping the queue; older cache entries lack it. */
+function cardState(name) {
+  const k = norm(name);
+  const e = artCache[k];
+  if (e && e.img) return e;
+  if (e && e.miss && Date.now() - e.t < ART_RETRY_MS) return "miss";
+  if (!artQueued.has(k)) { artQueued.add(k); artQueue.unshift({ name: name, k: k }); pumpArt(); }
+  else { const i = artQueue.findIndex((j) => j.k === k); if (i > 0) artQueue.unshift(artQueue.splice(i, 1)[0]); }
+  return "pending";
+}
 function saveArtCache() {
   const keys = Object.keys(artCache);
   if (keys.length > 1200) {
@@ -1825,13 +1947,13 @@ function pumpArt() {
       const face = card && !card.image_uris && Array.isArray(card.card_faces) ? card.card_faces[0] : card;
       const url = face && face.image_uris && face.image_uris.art_crop;
       artCache[job.k] = url
-        ? { url: url, artist: face.artist || card.artist || "", t: Date.now() }
+        ? { url: url, img: face.image_uris.normal || face.image_uris.large || "", artist: face.artist || card.artist || "", t: Date.now() }
         : { miss: true, t: Date.now() };
       if (url) paintArt(job.k); else dropArt(job.k);
       clearTimeout(artSaveTimer);
       artSaveTimer = setTimeout(saveArtCache, 600);
     })
-    .catch(() => { /* offline or rate limited: try again on the next visit */ })
+    .catch(() => { cardMissing(job.k, true); /* offline or rate limited: try again on the next visit */ })
     .finally(() => {
       artQueued.delete(job.k);
       setTimeout(() => { artBusy = false; pumpArt(); }, 110); // Scryfall asks for no more than ten requests a second
@@ -1846,8 +1968,20 @@ function paintArt(k) {
     img.hidden = false;
   });
   $$('[data-credit="' + k + '"]').forEach((el) => { el.textContent = e.artist ? "Illus. " + e.artist : ""; el.hidden = !e.artist; });
+  if (e.img) {
+    $$('img[data-card="' + k + '"]').forEach((img) => { img.src = e.img; img.hidden = false; });
+    $$('[data-card-wait="' + k + '"]').forEach((el) => { el.hidden = true; });
+  }
+}
+function cardMissing(k, offline) {
+  $$('img[data-card="' + k + '"]').forEach((img) => { img.hidden = true; });
+  $$('[data-card-wait="' + k + '"]').forEach((el) => {
+    el.hidden = false;
+    el.innerHTML = '<span class="rc-big" aria-hidden="true">🃏</span><span>' + (offline ? "Couldn’t reach Scryfall for the picture just now" : "No picture for this one") + "</span>";
+  });
 }
 function dropArt(k) {
+  cardMissing(k);
   $$('[data-art-half="' + k + '"]').forEach((el) => {
     const box = el.parentElement;
     el.remove();
@@ -2220,7 +2354,7 @@ function render() {
     $("#loadingMsg").textContent = state.loadError ? "Couldn't load your pod's games. " + state.loadError : "Loading your pod's games…";
     $("#retryBtn").hidden = !state.loadError;
   }
-  const empty = !loading && state.view !== "log" && state.view !== "tables" && !state.games.length;
+  const empty = !loading && state.view !== "log" && state.view !== "tables" && state.view !== "discover" && !state.games.length;
   $("#emptyState").hidden = !empty;
   if (empty) {
     $("#emptyState").innerHTML = state.phase === "offline"
@@ -2232,6 +2366,7 @@ function render() {
   if (loading || empty) return;
   if (state.view === "log") { updateLogChrome(); return; }
   if (state.view === "tables") { renderTables(); return; }
+  if (state.view === "discover") { renderDiscover(); return; }
   const all = currentGames();
   const games = periodGames(all);
   const st = computeStats(games);
@@ -4206,18 +4341,22 @@ function picksFor(name, count, nonce) {
   const page = nonce % pages;
   return { taste: taste, picks: all.slice(page * count, page * count + count) };
 }
+function starHTML(name) {
+  const on = disc.shortlist.some((x) => norm(x) === norm(name));
+  return '<button type="button" class="star" data-star="' + esc(name) + '" aria-pressed="' + on + '">' + ICON.star + "<span>" + (on ? "Saved" : "Save") + "</span></button>";
+}
 function cmdletHTML(e, why) {
   return '<li class="cmdlet">' + artPicHTML([e.name], "cmdlet-art", true) +
     '<div class="cmdlet-body"><div class="cmdlet-name">' + esc(e.name) + pipsHTML(e.ci, "sm") + "</div>" +
       (why ? '<p class="cmdlet-why">' + esc(why) + "</p>" : "") +
-      '<div class="cmdlet-foot">' +
+      '<div class="cmdlet-foot">' + starHTML(e.name) +
         '<a class="link small" href="' + esc(edhrecLink(e.name)) + '" target="_blank" rel="noopener">EDHREC</a>' +
         '<a class="link small" href="' + esc(scryfall(e.name)) + '" target="_blank" rel="noopener">Scryfall</a></div>' +
     "</div></li>";
 }
 function picksHTML(name, count, nonce) {
   const r = picksFor(name, count, nonce);
-  if (!r.taste.games) return '<p class="chart-empty">' + esc(name) + " hasn’t played a logged game yet. Picks show up here after their first one.</p>";
+  if (!r.taste.games) return '<p class="chart-empty">' + esc(name) + " hasn’t played a logged game yet. Picks show up here after their first one, and the quiz on Discover works for anyone.</p>";
   if (!r.picks.length) return '<p class="chart-empty">No picks yet. The commanders in ' + esc(name) + "’s games aren’t ones this page knows.</p>";
   return '<ul class="cmdlets">' + r.picks.map((e) => cmdletHTML(e, whyFor(e, r.taste, name))).join("") + "</ul>";
 }
@@ -4266,6 +4405,326 @@ function nextSplash() {
   el.classList.remove("pop");
   void el.offsetWidth; // restart the pop
   el.classList.add("pop");
+}
+
+/* ---------- Discover: random commanders, the quiz, picks and a shortlist ---------- */
+const DISC_KEY = "podLedger.discover.v1";
+const QUIZ_STYLES = [
+  { id: "army", em: "🐜", label: "A huge army of little creatures", tags: { t: 1, k: 0.6, y: 0.5 }, title: "Swarm Wrangler", blurb: "You like a crowded board and one big swing when nobody’s watching." },
+  { id: "monster", em: "🦖", label: "One enormous monster", tags: { b: 1, v: 0.7, c: 0.5 }, title: "Monster Tamer", blurb: "You’d happily trade twenty small creatures for one terrifying one." },
+  { id: "spells", em: "🪄", label: "Clever spells and combos", tags: { s: 1, r: 0.6, q: 0.5 }, title: "Spell Slinger", blurb: "Your favourite turn is the one where everything chains together." },
+  { id: "control", em: "🙅", label: "Saying no to everything", tags: { n: 1, r: 0.4 }, title: "Professional No-Sayer", blurb: "You enjoy the quiet power of having an answer for everything." },
+  { id: "graveyard", em: "🧟", label: "Bringing things back from the dead", tags: { g: 1, x: 0.6 }, title: "Necromancer", blurb: "For you, the graveyard is just a second hand." },
+  { id: "drain", em: "🩸", label: "Draining the whole table", tags: { p: 1, x: 0.6, l: 0.5 }, title: "Life Leech", blurb: "You like watching every life total tick down at once." },
+  { id: "counters", em: "🌱", label: "Growing things a little every turn", tags: { c: 1, l: 0.3, t: 0.3 }, title: "Gardener", blurb: "Slow and steady growth is your favourite kind of threat." },
+  { id: "engine", em: "⚙️", label: "Artifacts and enchantments", tags: { a: 1, e: 1, v: 0.3 }, title: "Tinkerer", blurb: "You love building a little engine out of permanents." },
+  { id: "lands", em: "🌋", label: "Playing heaps of lands", tags: { d: 1, b: 0.4 }, title: "Landscaper", blurb: "More lands means more of everything, and you know it." },
+  { id: "chaos", em: "🎲", label: "Coin flips and chaos", tags: { z: 1, o: 0.7, q: 0.3 }, title: "Agent of Chaos", blurb: "You’re here for the stories people tell after the game." },
+  { id: "friends", em: "🤝", label: "Making friends and deals", tags: { h: 1, r: 0.3, l: 0.3 }, title: "Group Hugger", blurb: "You play the table as much as the cards." },
+];
+const QUIZ_VIBES = [
+  { id: "C", em: "🐭", label: "Cute critters", word: "Cuddly" },
+  { id: "S", em: "👻", label: "Spooky", word: "Spooky" },
+  { id: "D", em: "🐉", label: "Dragons and dinosaurs", word: "Scaly" },
+  { id: "W", em: "📚", label: "Wizards", word: "Bookish" },
+  { id: "N", em: "🌿", label: "Nature and elves", word: "Leafy" },
+  { id: "P", em: "🏴‍☠️", label: "Pirates and the sea", word: "Salty" },
+  { id: "K", em: "🛡️", label: "Knights and angels", word: "Noble" },
+  { id: "R", em: "🤖", label: "Robots and gadgets", word: "Clockwork" },
+  { id: "U", em: "🎬", label: "Crossovers like Final Fantasy and Marvel", word: "Multiversal" },
+  { id: "", em: "✨", label: "Anything goes", word: "" },
+];
+const QUIZ_CX = [
+  { id: 1, em: "🍵", label: "Keep it simple" },
+  { id: 2, em: "🧩", label: "A few moving parts" },
+  { id: 3, em: "🧠", label: "Big brain puzzles" },
+];
+const QUIZ_POP = [
+  { id: "hot", em: "🌟", label: "A crowd favourite" },
+  { id: "gem", em: "💎", label: "A hidden gem" },
+  { id: "", em: "🎁", label: "Surprise me" },
+];
+const QUIZ_STEPS = 5;
+const disc = loadDisc();
+let picksNonce = 0;
+let rolling = false;
+function loadDisc() {
+  let d;
+  try { d = JSON.parse(localStorage.getItem(DISC_KEY) || "{}") || {}; } catch (e) { d = {}; }
+  const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
+  const names = (v, max) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x).map((x) => x.slice(0, 160)).slice(0, max) : []);
+  const q = d.quiz && typeof d.quiz === "object" ? d.quiz : null;
+  return {
+    roll: str(d.roll, 160),
+    history: names(d.history, 12),
+    colours: /^[WUBRGC]{0,6}$/.test(d.colours || "") ? d.colours || "" : "",
+    exact: !!d.exact,
+    theme: THEMES[d.theme] ? d.theme : "",
+    pop: ["hot", "gem", "deep"].indexOf(d.pop) >= 0 ? d.pop : "",
+    picksFor: str(d.picksFor, 60),
+    shortlist: names(d.shortlist, 60),
+    quiz: q ? {
+      step: Math.max(0, Math.min(QUIZ_STEPS, q.step | 0)),
+      styles: (Array.isArray(q.styles) ? q.styles : []).filter((x) => QUIZ_STYLES.some((s) => s.id === x)).slice(0, 2),
+      colours: /^[WUBRG]{0,5}$/.test(q.colours || "") ? q.colours || "" : "",
+      vibe: QUIZ_VIBES.some((v) => v.id === q.vibe) ? q.vibe : null,
+      cx: [1, 2, 3].indexOf(q.cx) >= 0 ? q.cx : 0,
+      pop: QUIZ_POP.some((v) => v.id === q.pop) ? q.pop : null,
+      done: !!q.done,
+      nonce: q.nonce | 0,
+    } : null,
+  };
+}
+function saveDisc() { try { localStorage.setItem(DISC_KEY, JSON.stringify(disc)); } catch (e) { /* storage blocked */ } }
+
+function rollPool() {
+  const want = disc.colours;
+  return CMD.filter((e) => {
+    if (!canLead(e)) return false;
+    if (want) {
+      if (want === "C") { if (e.ci !== "C") return false; }
+      else if (disc.exact) { if (e.ci !== want) return false; }
+      else { for (const c of want) if (e.ci.indexOf(c) < 0) return false; }
+    }
+    if (disc.pop === "hot" && e.rank >= 600) return false;
+    if (disc.pop === "gem" && (e.rank < 600 || e.rank >= 2500)) return false;
+    if (disc.pop === "deep" && e.rank < 2500) return false;
+    if (disc.theme && e.tags.indexOf(disc.theme) < 0) return false;
+    return true;
+  });
+}
+function rollCardHTML(e) {
+  const k = e.n;
+  const st = cardState(e.name);
+  const ok = typeof st === "object";
+  const themes = themesOf(e);
+  return '<div class="roll-stage">' +
+    '<div class="rc-img">' +
+      '<img data-card="' + esc(k) + '" alt="' + esc(e.name) + '" referrerpolicy="no-referrer"' + (ok ? ' src="' + esc(st.img) + '"' : " hidden") + ">" +
+      '<div class="rc-fallback" data-card-wait="' + esc(k) + '"' + (ok ? " hidden" : "") + ">" +
+        (st === "miss" ? '<span class="rc-big" aria-hidden="true">🃏</span><span>No picture for this one</span>' : '<span class="rc-big" aria-hidden="true">✨</span><span>Fetching the card…</span>') +
+      "</div>" +
+    "</div>" +
+    '<div class="rc-info">' +
+      '<h4 class="rc-name" id="rollName">' + esc(e.name) + "</h4>" +
+      '<p class="rc-meta">' + pipsHTML(e.ci, "md") + "<span>" + esc((COMBO_NAMES[e.ci] || "") + " · " + popWord(e)) + "</span></p>" +
+      (themes.length ? '<ul class="theme-chips" aria-label="Themes">' + themes.map((t) => '<li class="' + (isVibe(t) ? "vibe" : "") + '">' + esc(THEMES[t]) + "</li>").join("") + "</ul>" : "") +
+      '<div class="rc-links">' + starHTML(e.name) +
+        '<a class="link small" href="' + esc(edhrecLink(e.name)) + '" target="_blank" rel="noopener">Build ideas on EDHREC</a>' +
+        '<a class="link small" href="' + esc(scryfall(e.name)) + '" target="_blank" rel="noopener">See it on Scryfall</a></div>' +
+    "</div></div>";
+}
+function buildDiscover() {
+  if ($("#rollColours").children.length) return;
+  $("#rollColours").innerHTML = "WUBRGC".split("").map((c) =>
+    '<button type="button" class="ctog ' + c.toLowerCase() + '" data-roll-colour="' + c + '" aria-pressed="false" aria-label="' + (c === "C" ? "Colourless" : COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + '">' + pipIcon(c) + "</button>").join("");
+  const styles = Object.keys(THEMES).filter((t) => !isVibe(t)).sort((a, b) => THEMES[a].localeCompare(THEMES[b]));
+  const vibes = Object.keys(THEMES).filter(isVibe);
+  $("#rollTheme").innerHTML = '<option value="">Any theme</option>' +
+    '<optgroup label="How it plays">' + styles.map((t) => '<option value="' + t + '">' + esc(THEMES[t]) + "</option>").join("") + "</optgroup>" +
+    '<optgroup label="Flavour">' + vibes.map((t) => '<option value="' + t + '">' + esc(THEMES[t]) + "</option>").join("") + "</optgroup>";
+  $("#rollPop").innerHTML = '<option value="">Any</option><option value="hot">Crowd favourites</option><option value="gem">Hidden gems</option><option value="deep">Deep cuts</option>';
+}
+function renderRoll() {
+  for (const b of $$("[data-roll-colour]")) b.setAttribute("aria-pressed", String(disc.colours.indexOf(b.dataset.rollColour) >= 0));
+  const exact = $("#rollExact");
+  exact.checked = disc.exact;
+  exact.disabled = !disc.colours || disc.colours === "C";
+  $("#rollTheme").value = disc.theme;
+  $("#rollPop").value = disc.pop;
+  const pool = rollPool();
+  $("#rollPoolCount").textContent = pool.length ? plural(pool.length, "commander") + " to pick from" : "No commanders match those filters.";
+  const btn = $("#rollBtn");
+  btn.innerHTML = ICON.dice + (disc.roll ? "Roll another" : "Roll a commander");
+  btn.disabled = !pool.length || rolling;
+  const e = disc.roll ? CMD_BY_NORM.get(norm(disc.roll)) : null;
+  $("#rollOut").innerHTML = e ? rollCardHTML(e)
+    : '<div class="roll-stage is-empty"><div class="rc-img"><div class="rc-fallback"><span class="rc-big" aria-hidden="true">🎲</span><span id="rollName">Your next commander is in here somewhere</span></div></div></div>';
+  const hist = disc.history.filter((n) => !e || norm(n) !== e.n).slice(0, 8);
+  const box = $("#rollHistory");
+  box.hidden = !hist.length;
+  box.innerHTML = hist.length ? '<span class="lab">Rolled before</span>' + hist.map((n) => '<button type="button" class="chip-btn" data-roll-show="' + esc(n) + '">' + esc(n) + "</button>").join("") : "";
+}
+function rollCommander() {
+  const pool = rollPool();
+  if (!pool.length || rolling) return;
+  const recent = new Set(disc.history.slice(0, 10).map(norm));
+  let fresh = pool.filter((e) => !recent.has(e.n));
+  if (!fresh.length) fresh = pool;
+  const pick = fresh[Math.floor(Math.random() * fresh.length)];
+  cardState(pick.name); // start fetching the picture during the shuffle
+  const land = () => {
+    rolling = false;
+    disc.roll = pick.name;
+    disc.history = [pick.name].concat(disc.history.filter((x) => norm(x) !== pick.n)).slice(0, 12);
+    saveDisc();
+    renderRoll();
+  };
+  if (reduceMotion()) { land(); return; }
+  rolling = true;
+  $("#rollBtn").disabled = true;
+  const nameEl = $("#rollName");
+  let ticks = 0;
+  const timer = setInterval(() => {
+    if (nameEl) nameEl.textContent = pool[Math.floor(Math.random() * pool.length)].name;
+    if (++ticks >= 10) { clearInterval(timer); land(); }
+  }, 55);
+}
+
+function quizPref(q) {
+  const tags = {};
+  q.styles.forEach((id) => {
+    const s = QUIZ_STYLES.find((x) => x.id === id);
+    if (s) for (const t in s.tags) tags[t] = Math.max(tags[t] || 0, s.tags[t]);
+  });
+  return { mode: "quiz", tags: tags, pick: q.colours, vibe: q.vibe || "", cx: q.cx || 0, pop: q.pop || "", exclude: new Set() };
+}
+function quizOptHTML(o, on, kind) {
+  return '<button type="button" class="qopt" data-quiz-pick="' + kind + ":" + o.id + '" aria-pressed="' + on + '"><span class="em" aria-hidden="true">' + o.em + "</span><span>" + esc(o.label) + "</span></button>";
+}
+function renderQuiz() {
+  const box = $("#quizBody");
+  const q = disc.quiz;
+  if (!q || (!q.done && q.step === 0)) {
+    box.innerHTML = '<div class="quiz-intro"><p class="em-row" aria-hidden="true">🐉🧙🐸👻🤖</p>' +
+      "<p>Five quick questions about how you like to play, then three commanders picked just for you.</p>" +
+      '<button type="button" class="btn btn-mythic" data-quiz="start">Take the quiz</button></div>';
+    return;
+  }
+  if (q.done) { box.innerHTML = quizResultHTML(q); return; }
+  let head = "", hint = "", opts = "", multi = false;
+  if (q.step === 1) {
+    head = "What makes a game night great?"; hint = "Pick one or two."; multi = true;
+    opts = QUIZ_STYLES.map((o) => quizOptHTML(o, q.styles.indexOf(o.id) >= 0, "style")).join("");
+  } else if (q.step === 2) {
+    head = "Which colours call to you?"; hint = "Pick as many as you like and your commander will stick to them. Pick none for a surprise."; multi = true;
+    opts = WUBRG.split("").map((c) => '<button type="button" class="qopt" data-quiz-pick="colour:' + c + '" aria-pressed="' + (q.colours.indexOf(c) >= 0) + '">' +
+      '<span class="em" aria-hidden="true">' + pipIcon(c) + "</span><span>" + esc(COLOUR_NAMES[c].replace(/^./, (m) => m.toUpperCase())) + "</span></button>").join("");
+  } else if (q.step === 3) {
+    head = "Choose a vibe"; hint = "The flavour you’d love to see on the table.";
+    opts = QUIZ_VIBES.map((o) => quizOptHTML(o, q.vibe === o.id, "vibe")).join("");
+  } else if (q.step === 4) {
+    head = "How much brain power?"; hint = "Some commanders fit on a sticky note. Others come with homework.";
+    opts = QUIZ_CX.map((o) => quizOptHTML(o, q.cx === o.id, "cx")).join("");
+  } else {
+    head = "Popular or obscure?"; hint = "Crowd favourites have heaps of deck ideas online. Hidden gems are the rarer finds.";
+    opts = QUIZ_POP.map((o) => quizOptHTML(o, q.pop === o.id, "pop")).join("");
+  }
+  const canNext = q.step !== 1 || q.styles.length > 0;
+  box.innerHTML = '<div class="quiz-progress" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => '<i class="' + (i <= q.step ? "on" : "") + '"></i>').join("") + "</div>" +
+    '<p class="eyebrow">Question ' + q.step + " of " + QUIZ_STEPS + "</p>" +
+    '<h4 class="quiz-q">' + esc(head) + "</h4><p class=\"quiz-hint\">" + esc(hint) + "</p>" +
+    '<div class="quiz-opts" role="group" aria-label="' + esc(head) + '">' + opts + "</div>" +
+    '<div class="quiz-nav">' +
+      (multi ? '<button type="button" class="btn btn-mythic" data-quiz="next"' + (canNext ? "" : " disabled") + ">" + (q.step === 2 && !q.colours ? "Surprise me" : "Next") + "</button>" : "") +
+      '<button type="button" class="link" data-quiz="back">Back</button></div>';
+}
+function quizWhy(e, pref) {
+  const bits = themesOf(e).filter((t) => pref.tags[t] && !isVibe(t)).sort((a, b) => pref.tags[b] - pref.tags[a]).slice(0, 2).map((t) => THEMES[t]);
+  if (pref.vibe && e.tags.indexOf(pref.vibe) >= 0) bits.push(THEMES[pref.vibe]);
+  if (COMBO_NAMES[e.ci]) bits.push(COMBO_NAMES[e.ci]);
+  return bits.join(" · ");
+}
+function quizResultHTML(q) {
+  const pref = quizPref(q);
+  const all = suggest(pref, 12, hashStr("quiz|" + [q.styles.join(","), q.colours, q.vibe, q.cx, q.pop].join("|")));
+  const pages = Math.max(1, Math.ceil(all.length / 3));
+  const picks = all.slice((q.nonce % pages) * 3, (q.nonce % pages) * 3 + 3);
+  const style = QUIZ_STYLES.find((x) => x.id === q.styles[0]) || QUIZ_STYLES[0];
+  const vibe = QUIZ_VIBES.find((x) => x.id === q.vibe);
+  const title = (vibe && vibe.word ? vibe.word + " " : "") + style.title;
+  return '<div class="quiz-result"><p class="eyebrow">Your result</p>' +
+    "<h4>You’re " + (/^[AEIOU]/.test(title) ? "an " : "a ") + esc(title) + "!</h4>" +
+    '<p class="quiz-blurb">' + esc(style.blurb) + "</p>" +
+    (picks.length ? '<ul class="cmdlets compact">' + picks.map((e) => cmdletHTML(e, quizWhy(e, pref))).join("") + "</ul>"
+      : '<p class="chart-empty">Nothing fits all of that. Try more colours or a different vibe.</p>') +
+    '<div class="quiz-nav">' + (pages > 1 ? '<button type="button" class="btn btn-quiet" data-quiz="more">Show me three more</button>' : "") +
+    '<button type="button" class="link" data-quiz="again">Take it again</button></div></div>';
+}
+function quizAction(act) {
+  if (act === "start" || act === "again") disc.quiz = { step: 1, styles: [], colours: "", vibe: null, cx: 0, pop: null, done: false, nonce: 0 };
+  else if (!disc.quiz) return;
+  else if (act === "next") disc.quiz.step = Math.min(QUIZ_STEPS, disc.quiz.step + 1);
+  else if (act === "back") {
+    if (disc.quiz.done) { disc.quiz.done = false; disc.quiz.step = QUIZ_STEPS; }
+    else disc.quiz.step = Math.max(0, disc.quiz.step - 1);
+  } else if (act === "more") disc.quiz.nonce++;
+  saveDisc();
+  renderQuiz();
+  if (act === "start" || act === "again") { const f = $("#quizBody .qopt"); if (f) f.focus(); }
+}
+function quizPick(val) {
+  const q = disc.quiz;
+  if (!q) return;
+  const i = val.indexOf(":"), kind = val.slice(0, i), id = val.slice(i + 1);
+  if (kind === "style") {
+    if (q.styles.indexOf(id) >= 0) q.styles = q.styles.filter((x) => x !== id);
+    else q.styles = q.styles.concat([id]).slice(-2);
+  } else if (kind === "colour") {
+    q.colours = WUBRG.split("").filter((c) => (c === id ? q.colours.indexOf(c) < 0 : q.colours.indexOf(c) >= 0)).join("");
+  } else {
+    if (kind === "vibe") q.vibe = id;
+    else if (kind === "cx") q.cx = +id;
+    else if (kind === "pop") q.pop = id;
+    // One-answer questions move straight on, after a moment to show the choice.
+    saveDisc();
+    renderQuiz();
+    setTimeout(() => {
+      if (disc.quiz !== q) return;
+      if (q.step >= QUIZ_STEPS) { q.done = true; q.nonce = 0; } else q.step++;
+      saveDisc();
+      renderQuiz();
+      const f = $("#quizBody .qopt, #quizBody .cmdlet a, #quizBody h4");
+      if (f && f.focus) f.focus({ preventScroll: true });
+    }, reduceMotion() ? 0 : 220);
+    return;
+  }
+  saveDisc();
+  renderQuiz();
+  const again = $('#quizBody [data-quiz-pick="' + val + '"]');
+  if (again) again.focus();
+}
+
+function renderPicks() {
+  const names = rosterNames().slice();
+  if (disc.picksFor && !names.some((n) => norm(n) === norm(disc.picksFor))) {
+    const known = state.games.some((g) => g.seats.some((s) => norm(s.player) === norm(disc.picksFor)));
+    if (known) names.push(disc.picksFor); else disc.picksFor = "";
+  }
+  if (!disc.picksFor) {
+    const withGames = names.find((n) => tasteOf(norm(n)).games);
+    disc.picksFor = withGames || names[0] || "";
+  }
+  $("#picksFor").innerHTML = names.map((n) => '<option value="' + esc(n) + '"' + (norm(n) === norm(disc.picksFor) ? " selected" : "") + ">" + esc(n) + "</option>").join("");
+  $("#picksFor").disabled = !names.length;
+  $("#picksBody").innerHTML = disc.picksFor ? picksHTML(disc.picksFor, 4, picksNonce) : '<p class="chart-empty">Log a game and picks for each player appear here.</p>';
+  $("#picksActions").hidden = !$("#picksBody .cmdlets");
+}
+function renderShortlist() {
+  const list = disc.shortlist.map((n) => CMD_BY_NORM.get(norm(n))).filter(Boolean);
+  $("#shortlistBody").innerHTML = (list.length
+    ? '<ul class="cmdlets">' + list.map((e) => cmdletHTML(e, (COMBO_NAMES[e.ci] || "") + " · " + popWord(e))).join("") + "</ul>"
+    : '<p class="chart-empty">Tap <b>Save</b> on any commander here and it waits for you in this list.</p>') +
+    '<p class="shortlist-note">The shortlist is kept in this browser only, so it’s yours alone.</p>';
+}
+function renderDiscover() {
+  buildDiscover();
+  renderRoll();
+  renderQuiz();
+  renderPicks();
+  renderShortlist();
+}
+function toggleStar(name) {
+  const on = disc.shortlist.some((x) => norm(x) === norm(name));
+  disc.shortlist = on ? disc.shortlist.filter((x) => norm(x) !== norm(name)) : [name].concat(disc.shortlist).slice(0, 60);
+  saveDisc();
+  for (const b of $$("[data-star]")) {
+    if (norm(b.dataset.star) !== norm(name)) continue;
+    b.setAttribute("aria-pressed", String(!on));
+    b.querySelector("span").textContent = on ? "Save" : "Saved";
+  }
+  if (state.view === "discover") renderShortlist();
+  toast(on ? "Taken off your shortlist" : state.view === "discover" ? "Saved to your shortlist" : "Saved to your shortlist on the Discover page");
 }
 
 /* ---------- sharing groups to the group chat ---------- */
@@ -5161,6 +5620,8 @@ function bindEvents() {
     if (goEl) { if (goEl.dataset.go === "log") openLog(); else go(goEl.dataset.go); return; }
     const pl = t.closest("[data-player]");
     if (pl) { openPlayer(pl.dataset.player); return; }
+    const star = t.closest("[data-star]");
+    if (star) { toggleStar(star.dataset.star); return; }
     if (t.closest("#splash")) { nextSplash(); return; }
     if (t.closest("#newsBtn")) { openNews(); return; }
     if (t.closest("#newsDone")) { closeNews(); return; }
@@ -5296,6 +5757,40 @@ function bindEvents() {
       tpChanged();
     }
   });
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!t.closest || !t.closest("#view-discover")) return;
+    const col = t.closest("[data-roll-colour]");
+    if (col) {
+      const c = col.dataset.rollColour;
+      if (c === "C") disc.colours = disc.colours === "C" ? "" : "C";
+      else {
+        const now = disc.colours === "C" ? "" : disc.colours;
+        disc.colours = WUBRG.split("").filter((x) => (x === c ? now.indexOf(x) < 0 : now.indexOf(x) >= 0)).join("");
+      }
+      saveDisc();
+      renderRoll();
+      return;
+    }
+    if (t.closest("#rollBtn")) { rollCommander(); return; }
+    const past = t.closest("[data-roll-show]");
+    if (past) { disc.roll = past.dataset.rollShow; saveDisc(); renderRoll(); return; }
+    const qa = t.closest("[data-quiz]");
+    if (qa) { quizAction(qa.dataset.quiz); return; }
+    const qp = t.closest("[data-quiz-pick]");
+    if (qp) { quizPick(qp.dataset.quizPick); return; }
+    if (t.closest("#picksShuffle")) { picksNonce++; renderPicks(); }
+  });
+  $("#view-discover").addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.id === "picksFor") { disc.picksFor = t.value; picksNonce = 0; saveDisc(); renderPicks(); return; }
+    if (t.id === "rollExact") disc.exact = t.checked;
+    else if (t.id === "rollTheme") disc.theme = t.value;
+    else if (t.id === "rollPop") disc.pop = t.value;
+    else return;
+    saveDisc();
+    renderRoll();
+  });
   $("#view-tables").addEventListener("input", (e) => {
     const t = e.target;
     if (t.dataset && t.dataset.tpGuest !== undefined) tp.slots[+t.dataset.tpGuest].player = t.value;
@@ -5330,6 +5825,8 @@ function bindEvents() {
     } else if (img && img.tagName === "IMG" && img.dataset && img.dataset.art) {
       delete artCache[img.dataset.art];
       dropArt(img.dataset.art);
+    } else if (img && img.tagName === "IMG" && img.dataset && img.dataset.card) {
+      cardMissing(img.dataset.card, true);
     }
   }, true);
   let lastWidth = window.innerWidth, resizeTimer = 0;
